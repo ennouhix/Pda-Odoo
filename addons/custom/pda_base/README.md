@@ -1,9 +1,8 @@
 # PDA Base (Odoo 19.0)
 
-Socle backend de l'application PDA de scan de codes-barres. Ce module ne
-contient **aucune interface** (pas d'OWL, pas de frontend) : il fournit la
-sécurité, le journal des opérations, la logique métier et une API JSON-RPC
-destinée au futur client PDA.
+Socle de l'application PDA de scan de codes-barres : sécurité, journal des
+opérations, logique métier, API JSON-RPC et premier écran OWL « Scanner »
+(recherche par code-barres et consultation du stock).
 
 ## Contenu
 
@@ -14,6 +13,26 @@ destinée au futur client PDA.
 | Modèle `pda.log` | Journal des opérations (succès et erreurs) |
 | Modèle abstrait `pda.service` | Logique métier : lookup produit, emplacements |
 | `controllers/main.py` | Endpoints JSON-RPC sécurisés |
+| Écran OWL `pda_base.scanner` | Scan, fiche produit, stock par emplacement, emplacements |
+
+## Interface PDA
+
+Menu **PDA > Scanner**, visible par les opérateurs PDA. L'action client OWL
+ouvre un écran plein format adapté au mobile :
+
+* champ de scan (validation par `Entrée`, comme la plupart des lecteurs) ;
+* fiche produit : référence, nom, quantité disponible totale et détail par
+  emplacement interne ;
+* erreurs lisibles (code-barres inconnu, droits insuffisants, réseau) ;
+* panneau « Emplacements » listant les emplacements internes et leur
+  code-barres.
+
+Le composant ne contient aucune logique métier : il appelle uniquement les
+endpoints JSON-RPC ci-dessous, qui délèguent à `pda.service`.
+
+Fichiers : `static/src/scanner/scanner.js`, `scanner.xml`, `scanner.scss`,
+chargés via `web.assets_backend`. L'action client est déclarée dans
+`views/pda_scanner_action.xml`.
 
 ## Sécurité
 
@@ -123,5 +142,6 @@ curl -s -b /tmp/pda.cookies -X POST \
 
 Les opérations `receipt`, `issue`, `transfer` et `inventory` sont déjà
 présentes dans la sélection `pda.log.operation` mais ne sont pas encore
-implémentées côté service. L'interface PDA (client mobile) constituera une
-étape ultérieure.
+implémentées côté service ni exposées dans l'écran OWL. Les prochaines étapes
+sont leur implémentation métier, puis leurs écrans de validation (quantités,
+emplacement destination, confirmation).

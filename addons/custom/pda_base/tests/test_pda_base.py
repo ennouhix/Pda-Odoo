@@ -85,12 +85,14 @@ class TestPdaService(PdaTestDataMixin, TransactionCase):
 
     def test_lookup_unknown_barcode(self):
         """Un code-barres inconnu lève une erreur métier structurée."""
-        error = self._lookup_expect_error(self.operator, 'INCONNU-999')
+        barcode = 'PDA-TEST-UNKNOWN'
+        error = self._lookup_expect_error(self.operator, barcode)
 
         self.assertEqual(error.error_code, 'unknown_barcode')
-        self.assertIn('INCONNU-999', error.message)
+        self.assertIn(barcode, error.message)
         log = self.env['pda.log'].search([
-            ('barcode', '=', 'INCONNU-999'),
+            ('barcode', '=', barcode),
+            ('user_id', '=', self.operator.id),
         ])
         self.assertEqual(len(log), 1)
         self.assertEqual(log.state, 'error')
@@ -189,3 +191,23 @@ class TestPdaHttp(PdaTestDataMixin, HttpCase):
         self.assertTrue(result['success'])
         location_ids = [location['id'] for location in result['locations']]
         self.assertIn(self.internal_location.id, location_ids)
+
+
+class TestPdaInterface(TransactionCase):
+    """Vérifie le câblage serveur de l'écran OWL (action client et menu)."""
+
+    def test_scanner_action_registered(self):
+        """L'action client pointe sur le tag OWL enregistré côté JS."""
+        action = self.env.ref('pda_base.action_pda_scanner')
+
+        self.assertEqual(action.type, 'ir.actions.client')
+        self.assertEqual(action.tag, 'pda_base.scanner')
+
+    def test_scanner_menu_visible_for_operators(self):
+        """Le menu Scanner est visible par les opérateurs PDA."""
+        menu = self.env.ref('pda_base.menu_pda_scanner')
+        action = self.env.ref('pda_base.action_pda_scanner')
+
+        self.assertIn(self.env.ref('pda_base.group_pda_user'), menu.group_ids)
+        self.assertEqual(menu.action._name, 'ir.actions.client')
+        self.assertEqual(menu.action.id, action.id)

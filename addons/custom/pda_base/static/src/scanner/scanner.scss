@@ -1,0 +1,121 @@
+.pda_scanner {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    .pda_header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+    }
+
+    .pda_title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .pda_subtitle {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0 0 0.5rem;
+    }
+
+    .pda_scan_input .form-control,
+    .pda_scan_input .btn {
+        min-height: 3.25rem;
+    }
+
+    .pda_hint {
+        margin: 0.5rem 0 0;
+        color: #6c757d;
+    }
+
+    .pda_error {
+        border: 2px solid #dc3545;
+        background: #f8d7da;
+        color: #842029;
+        border-radius: 0.5rem;
+        padding: 1rem;
+    }
+
+    .pda_error_title {
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .pda_error_code {
+        font-family: monospace;
+        font-size: 0.85rem;
+        opacity: 0.75;
+        margin-top: 0.25rem;
+    }
+
+    .pda_product {
+        border: 1px solid #dee2e6;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        background: #fff;
+    }
+
+    .pda_product_head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .pda_reference {
+        font-family: monospace;
+        font-size: 1rem;
+        color: #495057;
+    }
+
+    .pda_product_name {
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+
+    .pda_total {
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    .pda_total_value {
+        font-size: 2rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    .pda_total_uom {
+        margin-left: 0.25rem;
+        color: #6c757d;
+    }
+
+    .pda_total_label {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        color: #6c757d;
+    }
+
+    .pda_table {
+        margin-bottom: 1rem;
+    }
+
+    .pda_location_item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+    }
+
+    .pda_location_barcode {
+        font-family: monospace;
+        color: #6c757d;
+    }
+}

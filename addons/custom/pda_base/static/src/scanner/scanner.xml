@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+
+    <t t-name="pda_base.PdaScanner">
+        <div class="pda_scanner">
+            <header class="pda_header">
+                <h1 class="pda_title">PDA — Scan</h1>
+                <button type="button"
+                        class="btn btn-sm btn-outline-secondary pda_locations_toggle"
+                        t-on-click="toggleLocations">
+                    <i class="fa fa-map-marker me-1"/>
+                    Emplacements
+                </button>
+            </header>
+
+            <section class="pda_scan">
+                <label for="pda_barcode_input" class="form-label">Code-barres</label>
+                <div class="input-group pda_scan_input">
+                    <input id="pda_barcode_input"
+                           t-ref="barcodeInput"
+                           type="text"
+                           class="form-control form-control-lg"
+                           placeholder="Scannez ou saisissez un code-barres"
+                           autocomplete="off"
+                           autocapitalize="off"
+                           spellcheck="false"
+                           t-model="state.barcode"
+                           t-on-keydown="(ev) => ev.key === 'Enter' &amp;&amp; scan()"/>
+                    <button type="button"
+                            class="btn btn-primary btn-lg"
+                            t-att-disabled="state.loading || !state.barcode.trim()"
+                            t-on-click="scan">
+                        <i class="fa fa-barcode me-1"/>
+                        Rechercher
+                    </button>
+                </div>
+                <p t-if="state.loading" class="pda_hint">
+                    <i class="fa fa-circle-o-notch fa-spin me-1"/>Recherche en cours…
+                </p>
+            </section>
+
+            <section t-if="state.error" class="pda_error" role="alert">
+                <div class="pda_error_title">
+                    <i class="fa fa-exclamation-triangle me-2"/>
+                    <span t-esc="state.error.message"/>
+                </div>
+                <div class="pda_error_code" t-esc="state.error.code"/>
+                <button type="button" class="btn btn-light btn-lg w-100 mt-3"
+                        t-on-click="resetScan">
+                    Nouveau scan
+                </button>
+            </section>
+
+            <section t-if="state.product" class="pda_product">
+                <div class="pda_product_head">
+                    <div>
+                        <div class="pda_reference" t-esc="state.product.reference || state.product.barcode"/>
+                        <div class="pda_product_name" t-esc="state.product.name"/>
+                    </div>
+                    <div class="pda_total">
+                        <span class="pda_total_value" t-esc="state.product.total_available_quantity"/>
+                        <span class="pda_total_uom" t-esc="state.product.uom"/>
+                        <div class="pda_total_label">disponible</div>
+                    </div>
+                </div>
+
+                <table class="table pda_table">
+                    <thead>
+                        <tr>
+                            <th>Emplacement</th>
+                            <th class="text-end">Quantité</th>
+                            <th class="text-end">Disponible</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="state.product.locations" t-as="line" t-key="line.location_id">
+                            <td t-esc="line.location_name"/>
+                            <td class="text-end" t-esc="line.quantity"/>
+                            <td class="text-end" t-esc="line.available_quantity"/>
+                        </tr>
+                        <tr t-if="!state.product.locations.length">
+                            <td colspan="3" class="text-muted">Aucun stock interne.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <button type="button" class="btn btn-primary btn-lg w-100"
+                        t-on-click="resetScan">
+                    <i class="fa fa-barcode me-1"/>Scanner un autre produit
+                </button>
+            </section>
+
+            <section t-if="state.showLocations" class="pda_locations">
+                <h2 class="pda_subtitle">Emplacements internes</h2>
+                <p t-if="state.locationsLoading" class="pda_hint">
+                    <i class="fa fa-circle-o-notch fa-spin me-1"/>Chargement…
+                </p>
+                <ul class="list-group">
+                    <li t-foreach="state.locations" t-as="location" t-key="location.id"
+                        class="list-group-item pda_location_item">
+                        <span t-esc="location.name"/>
+                        <span t-if="location.barcode" class="pda_location_barcode"
+                              t-esc="location.barcode"/>
+                    </li>
+                    <li t-if="state.locationsLoaded and !state.locations.length"
+                        class="list-group-item text-muted">
+                        Aucun emplacement interne.
+                    </li>
+                </ul>
+            </section>
+        </div>
+    </t>
+
+</templates>

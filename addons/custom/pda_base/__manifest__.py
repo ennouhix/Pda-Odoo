@@ -13,9 +13,9 @@ Socle backend de l'application PDA pour Odoo 19 :
 * journal des opérations PDA (``pda.log``) ;
 * service métier ``pda.service`` (logique de lookup) ;
 * endpoints JSON-RPC sécurisés pour la recherche produit par code-barres
-  et la liste des emplacements internes.
-
-Ce module ne contient volontairement aucune interface (OWL/frontend).
+  et la liste des emplacements internes ;
+* écran PDA « Scanner » en OWL (recherche par code-barres, détail du stock
+  par emplacement, liste des emplacements internes).
 """,
     'author': "Odoo PDA",
     'website': "",
@@ -26,8 +26,14 @@ Ce module ne contient volontairement aucune interface (OWL/frontend).
         'security/pda_security.xml',
         'security/ir.model.access.csv',
         'views/pda_log_views.xml',
+        'views/pda_scanner_action.xml',
         'views/pda_menus.xml',
     ],
+    'assets': {
+        'web.assets_backend': [
+            'pda_base/static/src/scanner/**/*',
+        ],
+    },
     'installable': True,
     'application': False,
     'auto_install': False,
