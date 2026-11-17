@@ -8,6 +8,7 @@
  * module (eux-mêmes délégués à ``pda.service``) et affiche le résultat.
  */
 import { Component, onMounted, useRef, useState } from "@odoo/owl";
+import { scanBarcode } from "@web/core/barcode/barcode_dialog";
 import { rpc } from "@web/core/network/rpc";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
@@ -106,6 +107,29 @@ export class PdaScanner extends Component {
         this.state.operation = null;
         this.state.operationError = null;
         this.focusBarcodeInput();
+    }
+
+    /**
+     * Scanner un code-barres avec la caméra de l'appareil.
+     *
+     * Réutilise le scanner vidéo natif d'Odoo (BarcodeDetector, avec repli
+     * ZXing). La caméra exige un contexte sécurisé (HTTPS ou localhost).
+     *
+     * @returns {Promise<void>}
+     */
+    async scanWithCamera() {
+        try {
+            const barcode = await scanBarcode(this.env, "environment");
+            if (barcode) {
+                this.state.barcode = barcode;
+                await this.scan();
+            }
+        } catch (error) {
+            this.notification.add(
+                error?.message || "Impossible d'utiliser la caméra.",
+                { type: "danger" }
+            );
+        }
     }
 
     /**

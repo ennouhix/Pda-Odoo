@@ -15,8 +15,9 @@ Socle backend de l'application PDA pour Odoo 19 :
 * endpoints JSON-RPC sécurisés pour la recherche produit par code-barres,
   la liste des emplacements internes et les opérations de stock (réception,
   sortie, transfert, inventaire) ;
-* écran PDA « Scanner » en OWL (recherche par code-barres, détail du stock
-  par emplacement, opérations de stock, liste des emplacements internes).
+* écran PDA « Scanner » en OWL (recherche par code-barres, scan caméra,
+  détail du stock par emplacement, opérations de stock, liste des
+  emplacements internes).
 """,
     'author': "Odoo PDA",
     'website': "",

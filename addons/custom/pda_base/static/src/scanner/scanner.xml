@@ -27,6 +27,13 @@
                            t-model="state.barcode"
                            t-on-keydown="(ev) => ev.key === 'Enter' &amp;&amp; scan()"/>
                     <button type="button"
+                            class="btn btn-outline-secondary btn-lg"
+                            title="Scanner avec la caméra"
+                            aria-label="Scanner avec la caméra"
+                            t-on-click="scanWithCamera">
+                        <i class="fa fa-camera"/>
+                    </button>
+                    <button type="button"
                             class="btn btn-primary btn-lg"
                             t-att-disabled="state.loading || !state.barcode.trim()"
                             t-on-click="scan">

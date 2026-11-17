@@ -21,6 +21,8 @@ Menu **PDA > Scanner**, visible par les opérateurs PDA. L'action client OWL
 ouvre un écran plein format adapté au mobile :
 
 * champ de scan (validation par `Entrée`, comme la plupart des lecteurs) ;
+* bouton caméra pour scanner avec le téléphone (scanner vidéo natif
+  d'Odoo, sans dépendance supplémentaire) ;
 * fiche produit : référence, nom, quantité disponible totale et détail par
   emplacement interne ;
 * opérations de stock : réception, sortie, transfert et inventaire, avec
@@ -36,6 +38,26 @@ endpoints JSON-RPC ci-dessous, qui délèguent à `pda.service`.
 Fichiers : `static/src/scanner/scanner.js`, `scanner.xml`, `scanner.scss`,
 chargés via `web.assets_backend`. L'action client est déclarée dans
 `views/pda_scanner_action.xml`.
+
+## Scan avec la caméra du téléphone
+
+Le bouton caméra de l'écran PDA appelle `scanBarcode()` du module `web`
+d'Odoo 19 : détection native `BarcodeDetector` (Chrome/Android) avec repli
+ZXing chargé par Odoo. Aucune bibliothèque tierce n'est ajoutée au module.
+
+**Point de Vente** : Odoo 19 embarque déjà ce scanner dans le POS (bouton
+code-barres de la barre de navigation, quand le navigateur expose la caméra).
+Aucun code spécifique n'est nécessaire ; il suffit d'installer le module et
+d'avoir une caisse configurée :
+
+```bash
+docker compose run --rm odoo odoo -d pda_dev -i point_of_sale --stop-after-init
+```
+
+**Important** : `getUserMedia` n'est disponible qu'en contexte sécurisé
+(**HTTPS**) ou sur `localhost`. Depuis un téléphone, `http://192.168.x.x:8069`
+ne permettra pas d'ouvrir la caméra : il faut servir Odoo en HTTPS (reverse
+proxy) ou tester sur `localhost` avec les outils de développement mobiles.
 
 ## Sécurité
 
