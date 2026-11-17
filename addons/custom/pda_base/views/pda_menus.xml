@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+
+        <menuitem id="menu_pda_root"
+                  name="PDA"
+                  sequence="145"
+                  groups="group_pda_user"/>
+
+        <menuitem id="menu_pda_log"
+                  name="Journal"
+                  parent="menu_pda_root"
+                  action="action_pda_log"
+                  sequence="10"
+                  groups="group_pda_manager"/>
+
+    </data>
+</odoo>

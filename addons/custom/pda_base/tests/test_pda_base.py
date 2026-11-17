@@ -1,0 +1,191 @@
+# -*- coding: utf-8 -*-
+"""Tests du socle backend pda_base (service métier et endpoints HTTP)."""
+from odoo.tests import HttpCase, TransactionCase
+
+from odoo.addons.pda_base.models.pda_service import PdaError
+
+TEST_BARCODE = 'PDA-TEST-001'
+
+
+class PdaTestDataMixin:
+    """Données de démonstration partagées par les tests service et HTTP."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.pda_user_group = cls.env.ref('pda_base.group_pda_user')
+        cls.stock_user_group = cls.env.ref('stock.group_stock_user')
+        cls.internal_location = cls.env['stock.location'].create({
+            'name': 'PDA Test Shelf',
+            'usage': 'internal',
+        })
+        cls.product = cls.env['product.product'].create({
+            'name': 'Produit PDA Test',
+            'default_code': 'PDA-TEST-REF',
+            'barcode': TEST_BARCODE,
+            'type': 'consu',
+            'is_storable': True,
+        })
+        cls.env['stock.quant'].create({
+            'product_id': cls.product.id,
+            'location_id': cls.internal_location.id,
+            'quantity': 7.0,
+        })
+        cls.operator = cls.env['res.users'].create({
+            'name': 'Opérateur PDA',
+            'login': 'pda_operator',
+            'password': 'pda_operator',
+            'group_ids': [(6, 0, [cls.pda_user_group.id])],
+        })
+        cls.outsider = cls.env['res.users'].create({
+            'name': 'Utilisateur hors PDA',
+            'login': 'pda_outsider',
+            'password': 'pda_outsider',
+            'group_ids': [(6, 0, [cls.stock_user_group.id])],
+        })
+
+
+class TestPdaService(PdaTestDataMixin, TransactionCase):
+    """Tests de la logique métier portée par ``pda.service``."""
+
+    def _lookup_expect_error(self, user, barcode):
+        """Appeler le service en attendant une ``PdaError``.
+
+        Odoo 19 enveloppe ``assertRaises`` dans un savepoint annulé en cas
+        d'exception : l'utiliser effacerait la ligne de journal créée pendant
+        l'erreur, que ces tests doivent justement vérifier. On capture donc
+        l'exception manuellement pour conserver la transaction.
+        """
+        try:
+            self.env['pda.service'].with_user(user).lookup_product_by_barcode(
+                barcode,
+            )
+        except PdaError as error:
+            return error
+        self.fail("Une PdaError était attendue.")
+
+    def test_lookup_product_found(self):
+        """Un code-barres connu renvoie le produit et son stock."""
+        result = self.env['pda.service'].with_user(
+            self.operator,
+        ).lookup_product_by_barcode(TEST_BARCODE)
+
+        self.assertTrue(result['success'])
+        self.assertEqual(result['id'], self.product.id)
+        self.assertEqual(result['reference'], 'PDA-TEST-REF')
+        self.assertEqual(result['name'], 'Produit PDA Test')
+        self.assertEqual(result['barcode'], TEST_BARCODE)
+        self.assertAlmostEqual(result['total_available_quantity'], 7.0)
+        self.assertEqual(len(result['locations']), 1)
+        self.assertEqual(
+            result['locations'][0]['location_id'],
+            self.internal_location.id,
+        )
+        self.assertAlmostEqual(result['locations'][0]['available_quantity'], 7.0)
+
+    def test_lookup_unknown_barcode(self):
+        """Un code-barres inconnu lève une erreur métier structurée."""
+        error = self._lookup_expect_error(self.operator, 'INCONNU-999')
+
+        self.assertEqual(error.error_code, 'unknown_barcode')
+        self.assertIn('INCONNU-999', error.message)
+        log = self.env['pda.log'].search([
+            ('barcode', '=', 'INCONNU-999'),
+        ])
+        self.assertEqual(len(log), 1)
+        self.assertEqual(log.state, 'error')
+        self.assertEqual(log.operation, 'lookup')
+
+    def test_lookup_access_denied(self):
+        """Un utilisateur hors groupe PDA ne peut pas appeler le service."""
+        error = self._lookup_expect_error(self.outsider, TEST_BARCODE)
+
+        self.assertEqual(error.error_code, 'access_denied')
+        log = self.env['pda.log'].search([('user_id', '=', self.outsider.id)])
+        self.assertEqual(len(log), 1)
+        self.assertEqual(log.state, 'error')
+
+    def test_log_created_on_success(self):
+        """Un lookup réussi crée une ligne de journal pour l'opérateur."""
+        self.env['pda.service'].with_user(
+            self.operator,
+        ).lookup_product_by_barcode(TEST_BARCODE)
+
+        log = self.env['pda.log'].search([('user_id', '=', self.operator.id)])
+        self.assertEqual(len(log), 1)
+        self.assertEqual(log.operation, 'lookup')
+        self.assertEqual(log.state, 'success')
+        self.assertEqual(log.product_id, self.product)
+        self.assertEqual(log.barcode, TEST_BARCODE)
+
+    def test_internal_locations(self):
+        """Le service liste les emplacements internes avec leur code-barres."""
+        result = self.env['pda.service'].with_user(
+            self.operator,
+        ).get_internal_locations()
+
+        self.assertTrue(result['success'])
+        location_ids = [location['id'] for location in result['locations']]
+        self.assertIn(self.internal_location.id, location_ids)
+        listed = next(
+            location for location in result['locations']
+            if location['id'] == self.internal_location.id
+        )
+        self.assertEqual(listed['name'], self.internal_location.complete_name)
+
+
+class TestPdaHttp(PdaTestDataMixin, HttpCase):
+    """Tests des endpoints JSON-RPC exposés par le contrôleur PDA."""
+
+    def _call_pda(self, route, params):
+        """Appeler un endpoint PDA via JSON-RPC et retourner le résultat."""
+        response = self.url_open(route, json={
+            'jsonrpc': '2.0',
+            'method': 'call',
+            'id': 1,
+            'params': params,
+        })
+        self.assertEqual(response.status_code, 200)
+        return response.json()['result']
+
+    def test_http_product_found(self):
+        """L'endpoint produit renvoie les informations attendues."""
+        self.authenticate('pda_operator', 'pda_operator')
+        result = self._call_pda(
+            '/pda/api/product/by_barcode', {'barcode': TEST_BARCODE},
+        )
+
+        self.assertTrue(result['success'])
+        self.assertEqual(result['reference'], 'PDA-TEST-REF')
+        self.assertAlmostEqual(result['total_available_quantity'], 7.0)
+
+    def test_http_unknown_barcode(self):
+        """L'endpoint produit renvoie une erreur JSON sans trace Python."""
+        self.authenticate('pda_operator', 'pda_operator')
+        result = self._call_pda(
+            '/pda/api/product/by_barcode', {'barcode': 'INCONNU-999'},
+        )
+
+        self.assertFalse(result['success'])
+        self.assertEqual(result['error_code'], 'unknown_barcode')
+        self.assertIn('message', result)
+        self.assertNotIn('traceback', result)
+
+    def test_http_access_denied(self):
+        """Un utilisateur sans le groupe PDA reçoit une erreur d'accès."""
+        self.authenticate('pda_outsider', 'pda_outsider')
+        result = self._call_pda(
+            '/pda/api/product/by_barcode', {'barcode': TEST_BARCODE},
+        )
+
+        self.assertFalse(result['success'])
+        self.assertEqual(result['error_code'], 'access_denied')
+
+    def test_http_locations(self):
+        """L'endpoint emplacements renvoie les emplacements internes."""
+        self.authenticate('pda_operator', 'pda_operator')
+        result = self._call_pda('/pda/api/locations', {})
+
+        self.assertTrue(result['success'])
+        location_ids = [location['id'] for location in result['locations']]
+        self.assertIn(self.internal_location.id, location_ids)
