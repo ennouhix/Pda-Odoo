@@ -23,7 +23,10 @@ ouvre un écran plein format adapté au mobile :
 * champ de scan (validation par `Entrée`, comme la plupart des lecteurs) ;
 * fiche produit : référence, nom, quantité disponible totale et détail par
   emplacement interne ;
-* erreurs lisibles (code-barres inconnu, droits insuffisants, réseau) ;
+* opérations de stock : réception, sortie, transfert et inventaire, avec
+  quantité et emplacement(s), puis rafraîchissement du stock affiché ;
+* erreurs lisibles (code-barres inconnu, droits insuffisants, stock
+  insuffisant, quantité invalide, réseau) ;
 * panneau « Emplacements » listant les emplacements internes et leur
   code-barres.
 
@@ -59,8 +62,10 @@ résultat JSON structuré, sans trace Python :
 {"success": false, "error_code": "unknown_barcode", "message": "..."}
 ```
 
-Codes d'erreur : `invalid_barcode`, `unknown_barcode`, `access_denied`,
-`internal_error`.
+Codes d'erreur : `invalid_barcode`, `unknown_barcode`, `invalid_quantity`,
+`invalid_location`, `insufficient_stock`, `unsupported_tracking`,
+`configuration_error`, `validation_failed`, `inventory_conflict`,
+`access_denied`, `internal_error`.
 
 ### `POST /pda/api/product/by_barcode`
 
@@ -104,11 +109,49 @@ Aucun paramètre. Réponse :
 }
 ```
 
+### Opérations de stock
+
+Quatre endpoints supplémentaires, avec les mêmes contraintes (`jsonrpc`,
+`auth='user'`, `POST`, groupe `group_pda_user`) :
+
+| Endpoint | Paramètres | Effet |
+| --- | --- | --- |
+| `/pda/api/receipt` | `barcode`, `quantity`, `location_dest_id` | Transfert entrant vers un emplacement interne |
+| `/pda/api/issue` | `barcode`, `quantity`, `location_id` | Transfert sortant depuis un emplacement interne |
+| `/pda/api/transfer` | `barcode`, `quantity`, `location_id`, `location_dest_id` | Transfert interne entre deux emplacements |
+| `/pda/api/inventory` | `barcode`, `quantity`, `location_id` | Quantité comptée (0 autorisé) appliquée en inventaire |
+
+Chaque opération crée et valide un `stock.picking` standard (aucun `sudo()`,
+les droits Odoo de l'utilisateur s'appliquent) et renvoie la fiche produit à
+jour :
+
+```json
+{
+  "success": true,
+  "operation": "receipt",
+  "message": "Réception : 5.0 × Produit PDA Test",
+  "id": 42,
+  "total_available_quantity": 12.0,
+  "locations": []
+}
+```
+
+Règles métier : quantité strictement positive (sauf inventaire), emplacements
+internes uniquement, stock disponible vérifié pour les sorties et transferts,
+transfert refusé vers l'emplacement source. Les produits suivis par lot ou
+numéro de série sont refusés pour l'instant (`unsupported_tracking`).
+
+**Droits requis** : les opérateurs doivent aussi posséder les droits
+Inventaire (`stock.group_stock_user`) pour créer et valider les transferts et
+pour appliquer un inventaire. Sans ces droits, l'API renvoie
+`access_denied` — le module n'élargit jamais les droits Odoo.
+
 ### Journalisation
 
 Chaque appel, réussi ou en erreur, crée une ligne dans `pda.log` avec
-l'utilisateur d'origine, l'opération (`lookup` pour les deux endpoints), le
-code-barres, le produit, l'état et le message.
+l'utilisateur d'origine, l'opération (`lookup`, `receipt`, `issue`,
+`transfer`, `inventory`), le code-barres, le produit, l'emplacement, la
+quantité, l'état et le message.
 
 ## Installation
 
@@ -138,10 +181,16 @@ curl -s -b /tmp/pda.cookies -X POST \
   -d '{"jsonrpc":"2.0","method":"call","params":{"barcode":"PDA-TEST-001"},"id":1}'
 ```
 
+## Limites connues
+
+* pas de gestion des lots et numéros de série ;
+* pas de reliquat (backorder) : la quantité scannée est la quantité validée ;
+* pas d'idempotence : un double scan valide deux opérations ;
+* un seul entrepôt pris en compte (celui de l'emplacement scanné, sinon le
+  premier de la société).
+
 ## Suite prévue
 
-Les opérations `receipt`, `issue`, `transfer` et `inventory` sont déjà
-présentes dans la sélection `pda.log.operation` mais ne sont pas encore
-implémentées côté service ni exposées dans l'écran OWL. Les prochaines étapes
-sont leur implémentation métier, puis leurs écrans de validation (quantités,
-emplacement destination, confirmation).
+Prochaines étapes : prise en charge des lots/numéros de série, anti-double
+scan (jeton d'opération), choix de l'entrepôt, et historique des opérations
+PDA dans l'écran mobile.

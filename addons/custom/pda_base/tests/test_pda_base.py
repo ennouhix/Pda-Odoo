@@ -35,7 +35,10 @@ class PdaTestDataMixin:
             'name': 'Opérateur PDA',
             'login': 'pda_operator',
             'password': 'pda_operator',
-            'group_ids': [(6, 0, [cls.pda_user_group.id])],
+            # Les opérations de stock exigent aussi les droits Inventaire.
+            'group_ids': [(6, 0, [
+                cls.pda_user_group.id, cls.stock_user_group.id,
+            ])],
         })
         cls.outsider = cls.env['res.users'].create({
             'name': 'Utilisateur hors PDA',
@@ -191,6 +194,183 @@ class TestPdaHttp(PdaTestDataMixin, HttpCase):
         self.assertTrue(result['success'])
         location_ids = [location['id'] for location in result['locations']]
         self.assertIn(self.internal_location.id, location_ids)
+
+    def test_http_receipt(self):
+        """L'endpoint réception valide un transfert entrant réel."""
+        self.authenticate('pda_operator', 'pda_operator')
+        result = self._call_pda('/pda/api/receipt', {
+            'barcode': TEST_BARCODE,
+            'quantity': 5,
+            'location_dest_id': self.internal_location.id,
+        })
+
+        self.assertTrue(result['success'])
+        self.assertEqual(result['operation'], 'receipt')
+        self.assertAlmostEqual(result['total_available_quantity'], 12.0)
+
+    def test_http_issue_insufficient_stock(self):
+        """L'endpoint sortie renvoie une erreur structurée sans trace."""
+        self.authenticate('pda_operator', 'pda_operator')
+        result = self._call_pda('/pda/api/issue', {
+            'barcode': TEST_BARCODE,
+            'quantity': 999,
+            'location_id': self.internal_location.id,
+        })
+
+        self.assertFalse(result['success'])
+        self.assertEqual(result['error_code'], 'insufficient_stock')
+        self.assertNotIn('traceback', result)
+
+
+class TestPdaOperations(PdaTestDataMixin, TransactionCase):
+    """Tests des opérations de stock exposées par ``pda.service``."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.second_location = cls.env['stock.location'].create({
+            'name': 'PDA Test Bin 2',
+            'usage': 'internal',
+        })
+
+    def _service(self, user=None):
+        """Retourner ``pda.service`` exécuté en tant qu'opérateur PDA."""
+        return self.env['pda.service'].with_user(user or self.operator)
+
+    def _expect_operation_error(self, method_name, *args):
+        """Appeler une opération en attendant une ``PdaError``."""
+        try:
+            getattr(self._service(), method_name)(*args)
+        except PdaError as error:
+            return error
+        self.fail("Une PdaError était attendue.")
+
+    def test_receipt_creates_stock(self):
+        """Une réception augmente le stock et valide un transfert entrant."""
+        result = self._service().receive_product(
+            TEST_BARCODE, 5, self.internal_location.id,
+        )
+
+        self.assertTrue(result['success'])
+        self.assertEqual(result['operation'], 'receipt')
+        self.assertAlmostEqual(result['total_available_quantity'], 12.0)
+        picking = self.env['stock.picking'].search(
+            [('origin', '=', 'PDA')], order='id desc', limit=1,
+        )
+        self.assertEqual(picking.state, 'done')
+        self.assertEqual(picking.picking_type_id.code, 'incoming')
+        log = self.env['pda.log'].search([
+            ('user_id', '=', self.operator.id),
+            ('operation', '=', 'receipt'),
+        ])
+        self.assertEqual(log.state, 'success')
+        self.assertAlmostEqual(log.quantity, 5.0)
+
+    def test_issue_removes_stock(self):
+        """Une sortie diminue le stock et valide un transfert sortant."""
+        result = self._service().issue_product(
+            TEST_BARCODE, 2, self.internal_location.id,
+        )
+
+        self.assertTrue(result['success'])
+        self.assertEqual(result['operation'], 'issue')
+        self.assertAlmostEqual(result['total_available_quantity'], 5.0)
+        picking = self.env['stock.picking'].search(
+            [('origin', '=', 'PDA')], order='id desc', limit=1,
+        )
+        self.assertEqual(picking.state, 'done')
+        self.assertEqual(picking.picking_type_id.code, 'outgoing')
+
+    def test_issue_insufficient_stock(self):
+        """Une sortie supérieure au stock disponible est refusée."""
+        error = self._expect_operation_error(
+            'issue_product', TEST_BARCODE, 999, self.internal_location.id,
+        )
+
+        self.assertEqual(error.error_code, 'insufficient_stock')
+        log = self.env['pda.log'].search([
+            ('user_id', '=', self.operator.id),
+            ('operation', '=', 'issue'),
+        ])
+        self.assertEqual(log.state, 'error')
+        self.assertAlmostEqual(
+            self.product.with_context(
+                location=self.internal_location.id,
+            ).qty_available,
+            7.0,
+        )
+
+    def test_transfer_moves_quantity(self):
+        """Un transfert déplace la quantité entre deux emplacements internes."""
+        result = self._service().transfer_product(
+            TEST_BARCODE, 3, self.internal_location.id, self.second_location.id,
+        )
+
+        self.assertTrue(result['success'])
+        self.assertEqual(result['operation'], 'transfer')
+        self.assertAlmostEqual(result['total_available_quantity'], 7.0)
+        quantities = {
+            line['location_id']: line['available_quantity']
+            for line in result['locations']
+        }
+        self.assertAlmostEqual(quantities[self.internal_location.id], 4.0)
+        self.assertAlmostEqual(quantities[self.second_location.id], 3.0)
+        picking = self.env['stock.picking'].search(
+            [('origin', '=', 'PDA')], order='id desc', limit=1,
+        )
+        self.assertEqual(picking.picking_type_id.code, 'internal')
+
+    def test_transfer_same_location_rejected(self):
+        """Un transfert vers l'emplacement source est refusé."""
+        error = self._expect_operation_error(
+            'transfer_product', TEST_BARCODE, 1,
+            self.internal_location.id, self.internal_location.id,
+        )
+
+        self.assertEqual(error.error_code, 'invalid_location')
+
+    def test_inventory_sets_counted_quantity(self):
+        """Un inventaire fixe la quantité comptée et crée un ajustement."""
+        result = self._service().inventory_product(
+            TEST_BARCODE, 4, self.internal_location.id,
+        )
+
+        self.assertTrue(result['success'])
+        self.assertEqual(result['operation'], 'inventory')
+        self.assertAlmostEqual(result['total_available_quantity'], 4.0)
+        self.assertAlmostEqual(
+            self.product.with_context(
+                location=self.internal_location.id,
+            ).qty_available,
+            4.0,
+        )
+
+    def test_inventory_zero_clears_stock(self):
+        """Un inventaire à zéro vide l'emplacement."""
+        result = self._service().inventory_product(
+            TEST_BARCODE, 0, self.internal_location.id,
+        )
+
+        self.assertTrue(result['success'])
+        self.assertAlmostEqual(result['total_available_quantity'], 0.0)
+
+    def test_operation_access_denied(self):
+        """Un utilisateur hors groupe PDA ne peut pas faire d'opération."""
+        try:
+            self._service(self.outsider).receive_product(
+                TEST_BARCODE, 1, self.internal_location.id,
+            )
+        except PdaError as error:
+            self.assertEqual(error.error_code, 'access_denied')
+        else:
+            self.fail("Une PdaError était attendue.")
+
+    def test_operation_invalid_quantity(self):
+        """Une quantité nulle ou non numérique est refusée."""
+        error = self._expect_operation_error(
+            'receive_product', TEST_BARCODE, 0, self.internal_location.id,
+        )
+        self.assertEqual(error.error_code, 'invalid_quantity')
 
 
 class TestPdaInterface(TransactionCase):

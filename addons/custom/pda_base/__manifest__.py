@@ -12,10 +12,11 @@ Socle backend de l'application PDA pour Odoo 19 :
 * groupes de sécurité « Opérateur PDA » et « Responsable PDA » ;
 * journal des opérations PDA (``pda.log``) ;
 * service métier ``pda.service`` (logique de lookup) ;
-* endpoints JSON-RPC sécurisés pour la recherche produit par code-barres
-  et la liste des emplacements internes ;
+* endpoints JSON-RPC sécurisés pour la recherche produit par code-barres,
+  la liste des emplacements internes et les opérations de stock (réception,
+  sortie, transfert, inventaire) ;
 * écran PDA « Scanner » en OWL (recherche par code-barres, détail du stock
-  par emplacement, liste des emplacements internes).
+  par emplacement, opérations de stock, liste des emplacements internes).
 """,
     'author': "Odoo PDA",
     'website': "",

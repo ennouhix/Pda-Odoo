@@ -107,6 +107,25 @@
         margin-bottom: 1rem;
     }
 
+    .pda_actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+
+        .btn {
+            min-height: 3.25rem;
+            white-space: normal;
+        }
+    }
+
+    .pda_operation {
+        border: 1px solid #0d6efd;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
     .pda_location_item {
         display: flex;
         align-items: center;

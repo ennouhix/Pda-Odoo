@@ -84,7 +84,78 @@
                     </tbody>
                 </table>
 
-                <button type="button" class="btn btn-primary btn-lg w-100"
+                <div t-if="!state.operation" class="pda_actions">
+                    <button t-foreach="operations"
+                            t-as="operation"
+                            t-key="operation.key"
+                            type="button"
+                            class="btn btn-outline-primary btn-lg"
+                            t-on-click="() => this.openOperation(operation.key)">
+                        <i t-attf-class="fa {{ operation.icon }} me-1"/>
+                        <t t-esc="operation.label"/>
+                    </button>
+                </div>
+
+                <div t-if="state.operation" class="pda_operation">
+                    <h2 class="pda_subtitle" t-esc="operationLabel"/>
+                    <label class="form-label" for="pda_operation_quantity">
+                        <t t-if="state.operation === 'inventory'">Quantité comptée</t>
+                        <t t-else="">Quantité</t>
+                        (<t t-esc="state.product.uom"/>)
+                    </label>
+                    <input id="pda_operation_quantity"
+                           type="number"
+                           inputmode="decimal"
+                           min="0"
+                           step="any"
+                           class="form-control form-control-lg mb-3"
+                           t-model="state.quantity"/>
+
+                    <div t-if="needsSource" class="mb-3">
+                        <label class="form-label" for="pda_operation_source">Emplacement source</label>
+                        <select id="pda_operation_source"
+                                class="form-select form-select-lg"
+                                t-model="state.locationId">
+                            <option value="">— Choisir —</option>
+                            <option t-foreach="state.locations"
+                                    t-as="location"
+                                    t-key="location.id"
+                                    t-att-value="location.id"
+                                    t-esc="location.name"/>
+                        </select>
+                    </div>
+
+                    <div t-if="needsDestination" class="mb-3">
+                        <label class="form-label" for="pda_operation_dest">Emplacement destination</label>
+                        <select id="pda_operation_dest"
+                                class="form-select form-select-lg"
+                                t-model="state.locationDestId">
+                            <option value="">— Choisir —</option>
+                            <option t-foreach="state.locations"
+                                    t-as="location"
+                                    t-key="location.id"
+                                    t-att-value="location.id"
+                                    t-esc="location.name"/>
+                        </select>
+                    </div>
+
+                    <div t-if="state.operationError" class="alert alert-danger"
+                         t-esc="state.operationError"/>
+
+                    <div class="d-grid gap-2 d-sm-flex">
+                        <button type="button"
+                                class="btn btn-success btn-lg flex-grow-1"
+                                t-att-disabled="!canSubmitOperation"
+                                t-on-click="submitOperation">
+                            <i class="fa fa-check me-1"/>Valider
+                        </button>
+                        <button type="button"
+                                class="btn btn-outline-secondary btn-lg"
+                                t-on-click="closeOperation">Annuler</button>
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-primary btn-lg w-100 mt-3"
                         t-on-click="resetScan">
                     <i class="fa fa-barcode me-1"/>Scanner un autre produit
                 </button>

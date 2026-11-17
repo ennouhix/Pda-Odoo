@@ -45,6 +45,65 @@ class PdaController(http.Controller):
         """
         return self._call_service('get_internal_locations')
 
+    @http.route(
+        '/pda/api/receipt',
+        type='jsonrpc',
+        auth='user',
+        methods=['POST'],
+    )
+    def receipt(
+        self, barcode=None, quantity=None, location_dest_id=None, **kwargs,
+    ) -> dict:
+        """Enregistrer une réception vers un emplacement interne."""
+        return self._call_service(
+            'receive_product', barcode, quantity, location_dest_id,
+        )
+
+    @http.route(
+        '/pda/api/issue',
+        type='jsonrpc',
+        auth='user',
+        methods=['POST'],
+    )
+    def issue(self, barcode=None, quantity=None, location_id=None, **kwargs) -> dict:
+        """Enregistrer une sortie de stock depuis un emplacement interne."""
+        return self._call_service(
+            'issue_product', barcode, quantity, location_id,
+        )
+
+    @http.route(
+        '/pda/api/transfer',
+        type='jsonrpc',
+        auth='user',
+        methods=['POST'],
+    )
+    def transfer(
+        self,
+        barcode=None,
+        quantity=None,
+        location_id=None,
+        location_dest_id=None,
+        **kwargs,
+    ) -> dict:
+        """Transférer un produit entre deux emplacements internes."""
+        return self._call_service(
+            'transfer_product', barcode, quantity, location_id, location_dest_id,
+        )
+
+    @http.route(
+        '/pda/api/inventory',
+        type='jsonrpc',
+        auth='user',
+        methods=['POST'],
+    )
+    def inventory(
+        self, barcode=None, quantity=None, location_id=None, **kwargs,
+    ) -> dict:
+        """Fixer la quantité comptée d'un produit dans un emplacement."""
+        return self._call_service(
+            'inventory_product', barcode, quantity, location_id,
+        )
+
     @staticmethod
     def _call_service(method_name: str, *args, **kwargs) -> dict:
         """Appeler une méthode du service PDA et sérialiser les erreurs.
