@@ -9,6 +9,7 @@
  */
 import { Component, onMounted, useRef, useState } from "@odoo/owl";
 import { scanBarcode } from "@web/core/barcode/barcode_dialog";
+import { isBarcodeScannerSupported } from "@web/core/barcode/barcode_video_scanner";
 import { rpc } from "@web/core/network/rpc";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
@@ -118,6 +119,14 @@ export class PdaScanner extends Component {
      * @returns {Promise<void>}
      */
     async scanWithCamera() {
+        if (!isBarcodeScannerSupported()) {
+            this.notification.add(
+                "Caméra indisponible : ouvrez Odoo en HTTPS ou sur localhost, "
+                + "puis autorisez l'accès à la caméra.",
+                { type: "warning" }
+            );
+            return;
+        }
         try {
             const barcode = await scanBarcode(this.env, "environment");
             if (barcode) {
