@@ -1,8 +1,8 @@
 # PDA Base (Odoo 19.0)
 
 Socle de l'application PDA de scan de codes-barres : sécurité, journal des
-opérations, logique métier, API JSON-RPC et premier écran OWL « Scanner »
-(recherche par code-barres et consultation du stock).
+opérations, logique métier, API JSON-RPC et écran mobile OWL « Scanner »
+(recherche par code-barres, stock par emplacement et opérations de stock).
 
 ## Contenu
 
@@ -20,17 +20,27 @@ opérations, logique métier, API JSON-RPC et premier écran OWL « Scanner »
 Menu **PDA > Scanner**, visible par les opérateurs PDA. L'action client OWL
 ouvre un écran plein format adapté au mobile :
 
+* **choix de l'opération avant le scan** (réception, sortie, transfert,
+  inventaire), rappelée ensuite sous forme de pastilles ;
 * champ de scan (validation par `Entrée`, comme la plupart des lecteurs) ;
 * bouton caméra pour scanner avec le téléphone (scanner vidéo natif
   d'Odoo, sans dépendance supplémentaire) ;
 * fiche produit : référence, nom, quantité disponible totale et détail par
-  emplacement interne ;
-* opérations de stock : réception, sortie, transfert et inventaire, avec
-  quantité et emplacement(s), puis rafraîchissement du stock affiché ;
+  emplacement interne, en cartes touchables ;
+* **scan d'une étiquette d'emplacement** (`LOC-A1`, `LOC-B1`, …) : le
+  code-barres est reconnu et affecté à l'emplacement source puis destination,
+  sans passer par la liste déroulante ;
+* quantités au pavé `−` / `+` ou au clavier numérique, avec reprise du stock
+  actuel pour un inventaire ;
+* **bandeau de confirmation** avec le message de l'opération et la fiche
+  produit rafraîchie (stock par emplacement à jour) ;
 * erreurs lisibles (code-barres inconnu, droits insuffisants, stock
   insuffisant, quantité invalide, réseau) ;
 * panneau « Emplacements » listant les emplacements internes et leur
   code-barres.
+
+Aucune bibliothèque front supplémentaire : OWL, Bootstrap et les services
+standards d'Odoo suffisent.
 
 Le composant ne contient aucune logique métier : il appelle uniquement les
 endpoints JSON-RPC ci-dessous, qui délèguent à `pda.service`.

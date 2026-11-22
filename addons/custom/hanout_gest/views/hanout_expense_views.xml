@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+
+        <record id="view_hanout_expense_list" model="ir.ui.view">
+            <field name="name">hanout.expense.list</field>
+            <field name="model">hanout.expense</field>
+            <field name="arch" type="xml">
+                <list string="Dépenses de caisse" editable="bottom">
+                    <field name="date"/>
+                    <field name="name"/>
+                    <field name="category"/>
+                    <field name="shop_id"/>
+                    <field name="amount" sum="Total"/>
+                    <field name="user_id" widget="many2one_avatar_user"/>
+                    <field name="session_id" optional="hide"/>
+                    <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="view_hanout_expense_form" model="ir.ui.view">
+            <field name="name">hanout.expense.form</field>
+            <field name="model">hanout.expense</field>
+            <field name="arch" type="xml">
+                <form string="Dépense de caisse">
+                    <sheet>
+                        <field name="currency_id" invisible="1"/>
+                        <div class="oe_title">
+                            <label for="name" string="Dépense"/>
+                            <h1>
+                                <field name="name" placeholder="Ex. Livraison boissons"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="category"/>
+                                <field name="amount"/>
+                                <field name="date"/>
+                            </group>
+                            <group>
+                                <field name="shop_id"/>
+                                <field name="session_id"/>
+                                <field name="company_id" groups="base.group_multi_company"/>
+                                <field name="user_id"/>
+                            </group>
+                        </group>
+                        <group string="Notes">
+                            <field name="note" nolabel="1" colspan="2"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_hanout_expense_search" model="ir.ui.view">
+            <field name="name">hanout.expense.search</field>
+            <field name="model">hanout.expense</field>
+            <field name="arch" type="xml">
+                <search string="Rechercher une dépense">
+                    <field name="name"/>
+                    <field name="shop_id"/>
+                    <field name="session_id"/>
+                    <field name="user_id"/>
+                    <filter name="filter_today" string="Aujourd'hui"
+                            domain="[('date', '=', context_today().strftime('%Y-%m-%d'))]"/>
+                    <filter name="filter_this_month" string="Ce mois-ci"
+                            domain="[('date', '&gt;=', (context_today() + relativedelta(day=1)).strftime('%Y-%m-%d'))]"/>
+                    <group>
+                        <filter name="group_category" string="Catégorie"
+                                context="{'group_by': 'category'}"/>
+                        <filter name="group_shop" string="Magasin"
+                                context="{'group_by': 'shop_id'}"/>
+                        <filter name="group_session" string="Session"
+                                context="{'group_by': 'session_id'}"/>
+                        <filter name="group_date" string="Date"
+                                context="{'group_by': 'date'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="action_hanout_expense" model="ir.actions.act_window">
+            <field name="name">Dépenses de caisse</field>
+            <field name="res_model">hanout.expense</field>
+            <field name="view_mode">list,form</field>
+            <field name="search_view_id" ref="view_hanout_expense_search"/>
+            <field name="context">{'search_default_filter_today': 1}</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Aucune dépense aujourd'hui
+                </p>
+                <p>
+                    Enregistrez ici les sorties d'espèces non marchandes
+                    (transport, électricité, avance sur salaire…). Elles sont
+                    déduites du théorique de caisse à la clôture.
+                </p>
+            </field>
+        </record>
+
+    </data>
+</odoo>

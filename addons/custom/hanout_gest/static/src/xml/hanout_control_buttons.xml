@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="hanout_control_buttons" xml:space="preserve">
+    <!-- Le retour client est le seul bouton des « Autres actions » conservé en
+         mode simple (voir hanout_pos.scss) : on le marque d'une classe pour
+         pouvoir l'isoler des actions avancées (annulation, note, liste de prix). -->
+    <t t-inherit="point_of_sale.ControlButtons" t-inherit-mode="extension">
+        <xpath expr="//button[i[hasclass('fa-undo')]]" position="attributes">
+            <attribute name="class">o_hanout_refund</attribute>
+        </xpath>
+    </t>
+</templates>

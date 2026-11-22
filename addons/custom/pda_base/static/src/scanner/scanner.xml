@@ -1,191 +1,311 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <templates xml:space="preserve">
 
+    <!-- Sélecteur d'opération, partagé par l'écran d'accueil et la fiche produit. -->
+    <t t-name="pda_base.PdaScannerModes">
+        <section class="pda_modes">
+            <h2 class="pda_section_title" t-esc="modeHeading"/>
+            <div class="pda_mode_grid">
+                <button t-foreach="operations"
+                        t-as="operation"
+                        t-key="operation.key"
+                        type="button"
+                        t-attf-class="pda_mode {{ state.operation === operation.key ? 'pda_mode_active' : '' }}"
+                        t-on-click="() => this.selectMode(operation.key)">
+                    <span class="pda_mode_icon">
+                        <i t-attf-class="fa {{ operation.icon }}"/>
+                    </span>
+                    <span class="pda_mode_label" t-esc="operation.label"/>
+                    <span class="pda_mode_hint" t-esc="operation.hint"/>
+                </button>
+            </div>
+        </section>
+    </t>
+
     <t t-name="pda_base.PdaScanner">
         <div class="pda_scanner">
-            <header class="pda_header">
-                <h1 class="pda_title">PDA — Scan</h1>
-                <button type="button"
-                        class="btn btn-sm btn-outline-secondary pda_locations_toggle"
-                        t-on-click="toggleLocations">
-                    <i class="fa fa-map-marker me-1"/>
-                    Emplacements
-                </button>
+            <header class="pda_topbar">
+                <div class="pda_topbar_inner">
+                    <div class="pda_identity">
+                        <div class="pda_brand">
+                            <i class="fa fa-barcode me-2"/>PDA Stock
+                        </div>
+                        <div class="pda_connected" t-if="username">
+                            <i class="fa fa-user-circle me-1"/>
+                            <span t-esc="username"/>
+                        </div>
+                    </div>
+                    <button type="button"
+                            class="pda_icon_btn"
+                            t-attf-class="pda_icon_btn {{ state.showLocations ? 'pda_icon_btn_active' : '' }}"
+                            t-on-click="toggleLocations">
+                        <i class="fa fa-map-marker"/>
+                        <span>Emplacements</span>
+                    </button>
+                </div>
             </header>
 
-            <section class="pda_scan">
-                <label for="pda_barcode_input" class="form-label">Code-barres</label>
-                <div class="input-group pda_scan_input">
-                    <input id="pda_barcode_input"
-                           t-ref="barcodeInput"
-                           type="text"
-                           class="form-control form-control-lg"
-                           placeholder="Scannez ou saisissez un code-barres"
-                           autocomplete="off"
-                           autocapitalize="off"
-                           spellcheck="false"
-                           t-model="state.barcode"
-                           t-on-keydown="(ev) => ev.key === 'Enter' &amp;&amp; scan()"/>
-                    <button type="button"
-                            class="btn btn-outline-secondary btn-lg"
-                            title="Scanner avec la caméra"
-                            aria-label="Scanner avec la caméra"
-                            t-on-click="scanWithCamera">
-                        <i class="fa fa-camera"/>
-                    </button>
-                    <button type="button"
-                            class="btn btn-primary btn-lg"
-                            t-att-disabled="state.loading || !state.barcode.trim()"
-                            t-on-click="scan">
-                        <i class="fa fa-barcode me-1"/>
-                        Rechercher
-                    </button>
-                </div>
-                <p t-if="state.loading" class="pda_hint">
-                    <i class="fa fa-circle-o-notch fa-spin me-1"/>Recherche en cours…
-                </p>
-            </section>
-
-            <section t-if="state.error" class="pda_error" role="alert">
-                <div class="pda_error_title">
-                    <i class="fa fa-exclamation-triangle me-2"/>
-                    <span t-esc="state.error.message"/>
-                </div>
-                <div class="pda_error_code" t-esc="state.error.code"/>
-                <button type="button" class="btn btn-light btn-lg w-100 mt-3"
-                        t-on-click="resetScan">
-                    Nouveau scan
-                </button>
-            </section>
-
-            <section t-if="state.product" class="pda_product">
-                <div class="pda_product_head">
-                    <div>
-                        <div class="pda_reference" t-esc="state.product.reference || state.product.barcode"/>
-                        <div class="pda_product_name" t-esc="state.product.name"/>
-                    </div>
-                    <div class="pda_total">
-                        <span class="pda_total_value" t-esc="state.product.total_available_quantity"/>
-                        <span class="pda_total_uom" t-esc="state.product.uom"/>
-                        <div class="pda_total_label">disponible</div>
-                    </div>
-                </div>
-
-                <table class="table pda_table">
-                    <thead>
-                        <tr>
-                            <th>Emplacement</th>
-                            <th class="text-end">Quantité</th>
-                            <th class="text-end">Disponible</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr t-foreach="state.product.locations" t-as="line" t-key="line.location_id">
-                            <td t-esc="line.location_name"/>
-                            <td class="text-end" t-esc="line.quantity"/>
-                            <td class="text-end" t-esc="line.available_quantity"/>
-                        </tr>
-                        <tr t-if="!state.product.locations.length">
-                            <td colspan="3" class="text-muted">Aucun stock interne.</td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <div t-if="!state.operation" class="pda_actions">
-                    <button t-foreach="operations"
-                            t-as="operation"
-                            t-key="operation.key"
-                            type="button"
-                            class="btn btn-outline-primary btn-lg"
-                            t-on-click="() => this.openOperation(operation.key)">
-                        <i t-attf-class="fa {{ operation.icon }} me-1"/>
-                        <t t-esc="operation.label"/>
-                    </button>
-                </div>
-
-                <div t-if="state.operation" class="pda_operation">
-                    <h2 class="pda_subtitle" t-esc="operationLabel"/>
-                    <label class="form-label" for="pda_operation_quantity">
-                        <t t-if="state.operation === 'inventory'">Quantité comptée</t>
-                        <t t-else="">Quantité</t>
-                        (<t t-esc="state.product.uom"/>)
-                    </label>
-                    <input id="pda_operation_quantity"
-                           type="number"
-                           inputmode="decimal"
-                           min="0"
-                           step="any"
-                           class="form-control form-control-lg mb-3"
-                           t-model="state.quantity"/>
-
-                    <div t-if="needsSource" class="mb-3">
-                        <label class="form-label" for="pda_operation_source">Emplacement source</label>
-                        <select id="pda_operation_source"
-                                class="form-select form-select-lg"
-                                t-model="state.locationId">
-                            <option value="">— Choisir —</option>
-                            <option t-foreach="state.locations"
-                                    t-as="location"
-                                    t-key="location.id"
-                                    t-att-value="location.id"
-                                    t-esc="location.name"/>
-                        </select>
-                    </div>
-
-                    <div t-if="needsDestination" class="mb-3">
-                        <label class="form-label" for="pda_operation_dest">Emplacement destination</label>
-                        <select id="pda_operation_dest"
-                                class="form-select form-select-lg"
-                                t-model="state.locationDestId">
-                            <option value="">— Choisir —</option>
-                            <option t-foreach="state.locations"
-                                    t-as="location"
-                                    t-key="location.id"
-                                    t-att-value="location.id"
-                                    t-esc="location.name"/>
-                        </select>
-                    </div>
-
-                    <div t-if="state.operationError" class="alert alert-danger"
-                         t-esc="state.operationError"/>
-
-                    <div class="d-grid gap-2 d-sm-flex">
+            <main class="pda_inner">
+                <!-- Scan -->
+                <section class="pda_card pda_scan">
+                    <label for="pda_barcode_input" class="pda_label">Code-barres</label>
+                    <div class="pda_scan_row">
+                        <div class="pda_scan_field">
+                            <i class="fa fa-barcode pda_scan_icon"/>
+                            <input id="pda_barcode_input"
+                                   t-ref="barcodeInput"
+                                   type="text"
+                                   class="pda_scan_input"
+                                   t-att-placeholder="scanPlaceholder"
+                                   autocomplete="off"
+                                   autocapitalize="off"
+                                   spellcheck="false"
+                                   t-model="state.barcode"
+                                   t-on-keydown="(ev) => ev.key === 'Enter' &amp;&amp; this.scan()"/>
+                        </div>
                         <button type="button"
-                                class="btn btn-success btn-lg flex-grow-1"
-                                t-att-disabled="!canSubmitOperation"
-                                t-on-click="submitOperation">
-                            <i class="fa fa-check me-1"/>Valider
+                                class="pda_scan_btn"
+                                title="Scanner avec la caméra"
+                                aria-label="Scanner avec la caméra"
+                                t-on-click="scanWithCamera">
+                            <i class="fa fa-camera"/>
                         </button>
                         <button type="button"
-                                class="btn btn-outline-secondary btn-lg"
-                                t-on-click="closeOperation">Annuler</button>
+                                class="pda_scan_btn pda_scan_btn_primary"
+                                title="Rechercher"
+                                aria-label="Rechercher"
+                                t-att-disabled="state.loading || !state.barcode.trim()"
+                                t-on-click="scan">
+                            <i t-attf-class="fa {{ state.loading ? 'fa-circle-o-notch fa-spin' : 'fa-search' }}"/>
+                        </button>
                     </div>
+                    <p t-if="state.operation" class="pda_hint">
+                        Scannez le produit, puis l'étiquette de l'emplacement.
+                    </p>
+                    <p t-else="" class="pda_hint">
+                        Douchette, clavier ou caméra : le produit s'affiche instantanément.
+                    </p>
+                </section>
+
+                <!-- Confirmation de la dernière opération -->
+                <div t-if="state.success" class="pda_success" role="status">
+                    <div class="pda_success_icon">
+                        <i class="fa fa-check"/>
+                    </div>
+                    <div class="pda_success_body">
+                        <div class="pda_success_title">Stock mis à jour</div>
+                        <div class="pda_success_message" t-esc="state.success.message"/>
+                    </div>
+                    <button type="button" class="pda_success_close"
+                            aria-label="Masquer"
+                            t-on-click="dismissSuccess">
+                        <i class="fa fa-times"/>
+                    </button>
                 </div>
 
-                <button type="button" class="btn btn-primary btn-lg w-100 mt-3"
-                        t-on-click="resetScan">
-                    <i class="fa fa-barcode me-1"/>Scanner un autre produit
-                </button>
-            </section>
+                <!-- Erreur de scan -->
+                <section t-if="state.error" class="pda_card pda_error" role="alert">
+                    <div class="pda_error_title">
+                        <i class="fa fa-exclamation-triangle me-2"/>
+                        <span t-esc="state.error.message"/>
+                    </div>
+                    <div class="pda_error_code">
+                        Code : <t t-esc="state.error.code"/>
+                    </div>
+                    <button type="button" class="btn pda_btn_primary" t-on-click="resetScan">
+                        <i class="fa fa-barcode me-2"/>Nouveau scan
+                    </button>
+                </section>
 
-            <section t-if="state.showLocations" class="pda_locations">
-                <h2 class="pda_subtitle">Emplacements internes</h2>
-                <p t-if="state.locationsLoading" class="pda_hint">
-                    <i class="fa fa-circle-o-notch fa-spin me-1"/>Chargement…
-                </p>
-                <ul class="list-group">
-                    <li t-foreach="state.locations" t-as="location" t-key="location.id"
-                        class="list-group-item pda_location_item">
-                        <span t-esc="location.name"/>
-                        <span t-if="location.barcode" class="pda_location_barcode"
-                              t-esc="location.barcode"/>
-                    </li>
-                    <li t-if="state.locationsLoaded and !state.locations.length"
-                        class="list-group-item text-muted">
-                        Aucun emplacement interne.
-                    </li>
-                </ul>
-            </section>
+                <t t-if="!state.product &amp;&amp; !state.error" t-call="pda_base.PdaScannerModes"/>
+
+                <!-- Fiche produit -->
+                <section t-if="state.product" class="pda_product_wrap">
+                    <div class="pda_chips" role="group" aria-label="Opération">
+                        <button t-foreach="operations"
+                                t-as="operation"
+                                t-key="operation.key"
+                                type="button"
+                                t-attf-class="pda_chip {{ state.operation === operation.key ? 'pda_chip_active' : '' }}"
+                                t-on-click="() => this.selectMode(operation.key)">
+                            <i t-attf-class="fa {{ operation.icon }} me-1"/>
+                            <t t-esc="operation.label"/>
+                        </button>
+                    </div>
+
+                    <div class="pda_card pda_product">
+                        <div class="pda_product_head">
+                            <div class="pda_product_id">
+                                <div class="pda_ref" t-esc="state.product.reference || state.product.barcode"/>
+                                <h2 class="pda_product_name" t-esc="state.product.name"/>
+                            </div>
+                            <div class="pda_total">
+                                <div class="pda_total_value" t-esc="formatQty(state.product.total_available_quantity)"/>
+                                <div class="pda_total_label">
+                                    <t t-esc="state.product.uom"/> disponible
+                                </div>
+                            </div>
+                        </div>
+
+                        <h3 class="pda_section_title">Stock par emplacement</h3>
+                        <div class="pda_line_list">
+                            <button t-foreach="state.product.locations"
+                                    t-as="line"
+                                    t-key="line.location_id"
+                                    type="button"
+                                    t-attf-class="pda_line {{ isLineSelected(line) ? 'pda_line_active' : '' }}"
+                                    t-att-disabled="!state.operation"
+                                    t-on-click="() => this.selectLine(line)">
+                                <span class="pda_line_name"
+                                      t-att-title="line.location_name"
+                                      t-esc="shortLocationName(line.location_name)"/>
+                                <span class="pda_line_qty">
+                                    <b t-esc="formatQty(line.available_quantity)"/>
+                                    <small t-esc="state.product.uom"/>
+                                </span>
+                                <i t-if="state.operation" class="fa fa-hand-pointer-o pda_line_pick"/>
+                            </button>
+                            <p t-if="!state.product.locations.length" class="pda_empty">
+                                Aucun stock interne pour ce produit.
+                            </p>
+                        </div>
+                        <p t-if="state.operation &amp;&amp; state.product.locations.length" class="pda_hint">
+                            Touchez un emplacement ou scannez son étiquette.
+                        </p>
+                    </div>
+
+                    <!-- Formulaire d'opération -->
+                    <div t-if="state.operation" class="pda_card pda_operation">
+                        <div class="pda_operation_head">
+                            <h2 class="pda_section_title" t-esc="operationLabel"/>
+                            <button type="button" class="pda_link" t-on-click="closeOperation">
+                                Changer
+                            </button>
+                        </div>
+
+                        <div class="pda_field">
+                            <label class="pda_label" for="pda_operation_quantity">
+                                <t t-if="state.operation === 'inventory'">Quantité comptée</t>
+                                <t t-else="">Quantité</t>
+                            </label>
+                            <div class="pda_qty">
+                                <button type="button"
+                                        class="pda_qty_btn"
+                                        aria-label="Diminuer"
+                                        t-on-click="() => this.adjustQuantity(-1)">
+                                    −
+                                </button>
+                                <div class="pda_qty_field">
+                                    <input id="pda_operation_quantity"
+                                           type="number"
+                                           inputmode="decimal"
+                                           step="any"
+                                           t-att-min="minQuantity"
+                                           t-model="state.quantity"/>
+                                    <span t-esc="state.product.uom"/>
+                                </div>
+                                <button type="button"
+                                        class="pda_qty_btn"
+                                        aria-label="Augmenter"
+                                        t-on-click="() => this.adjustQuantity(1)">
+                                    +
+                                </button>
+                            </div>
+                            <button t-if="state.operation === 'inventory' &amp;&amp; sourceLine"
+                                    type="button"
+                                    class="pda_link pda_link_block"
+                                    t-on-click="useCurrentStock">
+                                Reprendre le stock actuel
+                                (<t t-esc="formatQty(sourceLine.quantity)"/>)
+                            </button>
+                        </div>
+
+                        <div t-if="needsSource" class="pda_field">
+                            <label class="pda_label" for="pda_operation_source">Emplacement source</label>
+                            <select id="pda_operation_source"
+                                    class="form-select pda_select"
+                                    t-model="state.locationId"
+                                    t-on-change="(ev) => this.onSourceChange(ev)">
+                                <option value="">— Choisir —</option>
+                                <option t-foreach="state.locations"
+                                        t-as="location"
+                                        t-key="location.id"
+                                        t-att-value="location.id"
+                                        t-esc="location.name"/>
+                            </select>
+                            <p class="pda_hint">Ou scannez l'étiquette de l'emplacement.</p>
+                        </div>
+
+                        <div t-if="needsDestination" class="pda_field">
+                            <label class="pda_label" for="pda_operation_dest">Emplacement destination</label>
+                            <select id="pda_operation_dest"
+                                    class="form-select pda_select"
+                                    t-model="state.locationDestId">
+                                <option value="">— Choisir —</option>
+                                <option t-foreach="state.locations"
+                                        t-as="location"
+                                        t-key="location.id"
+                                        t-att-value="location.id"
+                                        t-esc="location.name"/>
+                            </select>
+                            <p class="pda_hint">Ou scannez l'étiquette de l'emplacement.</p>
+                        </div>
+
+                        <p t-if="state.operation === 'transfer' &amp;&amp; state.locationId &amp;&amp; state.locationId === state.locationDestId"
+                           class="pda_warning">
+                            <i class="fa fa-info-circle me-1"/>
+                            Choisissez deux emplacements différents.
+                        </p>
+
+                        <div t-if="state.operationError" class="pda_inline_error" role="alert"
+                             t-esc="state.operationError"/>
+
+                        <div class="pda_form_actions">
+                            <button type="button"
+                                    class="btn btn-success pda_primary"
+                                    t-att-disabled="!canSubmitOperation"
+                                    t-on-click="submitOperation">
+                                <i t-attf-class="fa {{ state.operationSubmitting ? 'fa-circle-o-notch fa-spin' : 'fa-check' }} me-2"/>
+                                <t t-if="state.operationSubmitting">Validation…</t>
+                                <t t-else=""><t t-esc="submitLabel"/></t>
+                            </button>
+                            <button type="button"
+                                    class="btn btn-outline-secondary pda_secondary"
+                                    t-on-click="closeOperation">
+                                Annuler
+                            </button>
+                        </div>
+                    </div>
+
+                    <t t-else="" t-call="pda_base.PdaScannerModes"/>
+
+                    <button type="button" class="btn pda_btn_ghost" t-on-click="resetScan">
+                        <i class="fa fa-barcode me-2"/>Scanner un autre produit
+                    </button>
+                </section>
+
+                <!-- Liste des emplacements internes -->
+                <section t-if="state.showLocations" class="pda_card pda_locations">
+                    <div class="pda_operation_head">
+                        <h2 class="pda_section_title">Emplacements internes</h2>
+                        <button type="button" class="pda_link" t-on-click="toggleLocations">
+                            Fermer
+                        </button>
+                    </div>
+                    <p t-if="state.locationsLoading" class="pda_hint">
+                        <i class="fa fa-circle-o-notch fa-spin me-1"/>Chargement…
+                    </p>
+                    <ul class="pda_plain_list">
+                        <li t-foreach="state.locations" t-as="location" t-key="location.id">
+                            <span class="pda_plain_name" t-esc="location.name"/>
+                            <code t-if="location.barcode" t-esc="location.barcode"/>
+                        </li>
+                        <li t-if="state.locationsLoaded &amp;&amp; !state.locations.length" class="pda_empty">
+                            Aucun emplacement interne.
+                        </li>
+                    </ul>
+                </section>
+            </main>
         </div>
     </t>
 

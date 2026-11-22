@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- ============================================================= -->
+        <!-- Comptes de test                                               -->
+        <!-- ============================================================= -->
+        <record id="user_hanout_caissier" model="res.users">
+            <field name="name">Yassine — Caissier Hanout</field>
+            <field name="login">hanout.caissier</field>
+            <field name="password">hanout.caissier</field>
+            <field name="email">caissier@hanout.local</field>
+            <field name="group_ids" eval="[(6, 0, [ref('hanout_gest.group_hanout_caissier')])]"/>
+        </record>
+
+        <record id="user_hanout_gerant" model="res.users">
+            <field name="name">Nadia — Gérante Hanout</field>
+            <field name="login">hanout.gerant</field>
+            <field name="password">hanout.gerant</field>
+            <field name="email">gerant@hanout.local</field>
+            <field name="group_ids" eval="[(6, 0, [ref('hanout_gest.group_hanout_gerant')])]"/>
+        </record>
+
+        <!-- ============================================================= -->
+        <!-- Magasin hanout                                                -->
+        <!-- ============================================================= -->
+        <record id="shop_hanout_casa" model="hanout.shop">
+            <field name="name">Hanout Casablanca</field>
+            <field name="code">HCS</field>
+            <field name="warehouse_id" ref="stock.warehouse0"/>
+            <field name="phone">05 22 00 11 22</field>
+            <field name="address">12 rue du marché, Casablanca</field>
+            <field name="note">Magasin de test : épicerie de quartier, une caisse,
+                un caissier.</field>
+        </record>
+
+        <!-- ============================================================= -->
+        <!-- Moyen de paiement et caisse                                   -->
+        <!-- ============================================================= -->
+        <record id="journal_caisse_casa" model="account.journal">
+            <field name="name">Caisse Hanout Casablanca</field>
+            <field name="type">cash</field>
+            <field name="code">CHCS</field>
+        </record>
+
+        <record id="payment_method_especes" model="pos.payment.method">
+            <field name="name">Espèces</field>
+            <field name="journal_id" ref="journal_caisse_casa"/>
+        </record>
+
+        <!-- Carnet : compte client sans journal, créance portée par le client. -->
+        <record id="payment_method_credit" model="pos.payment.method">
+            <field name="name">Crédit carnet</field>
+            <field name="split_transactions" eval="True"/>
+            <field name="sequence">20</field>
+        </record>
+
+        <record id="partner_client_carnet" model="res.partner">
+            <field name="name">Mohammed — client carnet</field>
+            <field name="phone">06 61 22 33 44</field>
+            <field name="hanout_credit_limit">300.00</field>
+        </record>
+
+        <record id="pricelist_hanout" model="product.pricelist">
+            <field name="name">Tarif hanout</field>
+        </record>
+
+        <record id="pos_categ_epicerie" model="pos.category">
+            <field name="name">Épicerie</field>
+        </record>
+
+        <!-- ============================================================= -->
+        <!-- Catalogue d'épicerie                                          -->
+        <!-- ============================================================= -->
+        <record id="product_eau" model="product.template">
+            <field name="name">Eau minérale 1,5 L</field>
+            <field name="default_code">EAU-15</field>
+            <field name="barcode">6110000000010</field>
+            <field name="list_price">4.50</field>
+            <field name="available_in_pos">True</field>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_categ_epicerie')])]"/>
+            <field name="taxes_id" eval="[(5, 0, 0)]"/>
+            <field name="supplier_taxes_id" eval="[(5, 0, 0)]"/>
+        </record>
+
+        <record id="product_pain" model="product.template">
+            <field name="name">Pain complet 500 g</field>
+            <field name="default_code">PAIN-500</field>
+            <field name="barcode">6110000000027</field>
+            <field name="list_price">2.00</field>
+            <field name="available_in_pos">True</field>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_categ_epicerie')])]"/>
+            <field name="taxes_id" eval="[(5, 0, 0)]"/>
+            <field name="supplier_taxes_id" eval="[(5, 0, 0)]"/>
+        </record>
+
+        <record id="product_lait" model="product.template">
+            <field name="name">Lait demi-écrémé 1 L</field>
+            <field name="default_code">LAIT-1</field>
+            <field name="barcode">6110000000034</field>
+            <field name="list_price">7.50</field>
+            <field name="available_in_pos">True</field>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_categ_epicerie')])]"/>
+            <field name="taxes_id" eval="[(5, 0, 0)]"/>
+            <field name="supplier_taxes_id" eval="[(5, 0, 0)]"/>
+        </record>
+
+        <record id="product_the" model="product.template">
+            <field name="name">Thé vert 200 g</field>
+            <field name="default_code">THE-200</field>
+            <field name="barcode">6110000000041</field>
+            <field name="list_price">15.00</field>
+            <field name="available_in_pos">True</field>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_categ_epicerie')])]"/>
+            <field name="taxes_id" eval="[(5, 0, 0)]"/>
+            <field name="supplier_taxes_id" eval="[(5, 0, 0)]"/>
+        </record>
+
+        <record id="product_sucre" model="product.template">
+            <field name="name">Sucre 1 kg</field>
+            <field name="default_code">SUCRE-1</field>
+            <field name="barcode">6110000000058</field>
+            <field name="list_price">11.00</field>
+            <field name="available_in_pos">True</field>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_categ_epicerie')])]"/>
+            <field name="taxes_id" eval="[(5, 0, 0)]"/>
+            <field name="supplier_taxes_id" eval="[(5, 0, 0)]"/>
+        </record>
+
+        <record id="product_cafe" model="product.template">
+            <field name="name">Café moulu 250 g</field>
+            <field name="default_code">CAFE-250</field>
+            <field name="barcode">6110000000065</field>
+            <field name="list_price">32.00</field>
+            <field name="available_in_pos">True</field>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_categ_epicerie')])]"/>
+            <field name="taxes_id" eval="[(5, 0, 0)]"/>
+            <field name="supplier_taxes_id" eval="[(5, 0, 0)]"/>
+        </record>
+
+        <record id="product_oeufs" model="product.template">
+            <field name="name">Œufs — boîte de 6</field>
+            <field name="default_code">OEUF-6</field>
+            <field name="barcode">6110000000072</field>
+            <field name="list_price">12.00</field>
+            <field name="available_in_pos">True</field>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_categ_epicerie')])]"/>
+            <field name="taxes_id" eval="[(5, 0, 0)]"/>
+            <field name="supplier_taxes_id" eval="[(5, 0, 0)]"/>
+        </record>
+
+        <record id="product_savon" model="product.template">
+            <field name="name">Savon de Marseille</field>
+            <field name="default_code">SAVON-1</field>
+            <field name="barcode">6110000000089</field>
+            <field name="list_price">7.50</field>
+            <field name="available_in_pos">True</field>
+            <field name="pos_categ_ids" eval="[(6, 0, [ref('pos_categ_epicerie')])]"/>
+            <field name="taxes_id" eval="[(5, 0, 0)]"/>
+            <field name="supplier_taxes_id" eval="[(5, 0, 0)]"/>
+        </record>
+
+        <!-- ============================================================= -->
+        <!-- Caisse hanout simplifiée                                      -->
+        <!-- ============================================================= -->
+        <record id="pos_config_hanout_casa" model="pos.config">
+            <field name="name">Caisse Hanout Casablanca</field>
+            <field name="hanout_shop_id" ref="shop_hanout_casa"/>
+            <field name="pricelist_id" ref="pricelist_hanout"/>
+            <field name="payment_method_ids" eval="[(6, 0, [ref('payment_method_especes'), ref('payment_method_credit')])]"/>
+            <field name="hanout_simple_mode" eval="True"/>
+            <field name="use_fast_payment" eval="True"/>
+            <field name="fast_payment_method_ids" eval="[(6, 0, [ref('payment_method_especes')])]"/>
+            <field name="manual_discount" eval="False"/>
+            <field name="iface_tipproduct" eval="False"/>
+            <field name="use_pricelist" eval="False"/>
+            <field name="show_product_images" eval="True"/>
+        </record>
+
+        <!-- ============================================================= -->
+        <!-- Dépenses de caisse du jour                                    -->
+        <!-- ============================================================= -->
+        <record id="expense_livraison" model="hanout.expense">
+            <field name="name">Livraison boissons</field>
+            <field name="category">transport</field>
+            <field name="amount">80.00</field>
+            <field name="shop_id" ref="shop_hanout_casa"/>
+            <field name="note">Payé au livreur en espèces, à la réception.</field>
+        </record>
+
+        <record id="expense_electricite" model="hanout.expense">
+            <field name="name">Facture d'électricité</field>
+            <field name="category">utilities</field>
+            <field name="amount">150.00</field>
+            <field name="shop_id" ref="shop_hanout_casa"/>
+        </record>
+
+    </data>
+</odoo>

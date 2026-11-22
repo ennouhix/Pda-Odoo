@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+
+        <menuitem id="menu_hanout_root"
+                  name="Hanout"
+                  sequence="146"
+                  groups="group_hanout_caissier"/>
+
+        <!-- Premier menu du caissier : un clic mène à la caisse. -->
+        <menuitem id="menu_hanout_sell"
+                  name="Vendre"
+                  parent="menu_hanout_root"
+                  action="action_hanout_open_pos"
+                  sequence="5"/>
+
+        <menuitem id="menu_hanout_caisse"
+                  name="Caisse"
+                  parent="menu_hanout_root"
+                  sequence="10"/>
+
+        <menuitem id="menu_hanout_session"
+                  name="Sessions"
+                  parent="menu_hanout_caisse"
+                  action="point_of_sale.action_pos_session"
+                  sequence="10"/>
+
+        <menuitem id="menu_hanout_expense"
+                  name="Dépenses"
+                  parent="menu_hanout_caisse"
+                  action="action_hanout_expense"
+                  sequence="20"/>
+
+        <menuitem id="menu_hanout_credit"
+                  name="Carnet"
+                  parent="menu_hanout_root"
+                  sequence="15"/>
+
+        <menuitem id="menu_hanout_debtor"
+                  name="Débiteurs"
+                  parent="menu_hanout_credit"
+                  action="action_hanout_debtor"
+                  sequence="10"/>
+
+        <menuitem id="menu_hanout_shop"
+                  name="Magasins"
+                  parent="menu_hanout_root"
+                  action="action_hanout_shop"
+                  sequence="20"/>
+
+        <menuitem id="menu_hanout_configuration"
+                  name="Configuration"
+                  parent="menu_hanout_root"
+                  groups="group_hanout_gerant"
+                  sequence="90"/>
+
+        <menuitem id="menu_hanout_shop_config"
+                  name="Magasins"
+                  parent="menu_hanout_configuration"
+                  action="action_hanout_shop"
+                  sequence="10"/>
+
+        <menuitem id="menu_hanout_pos_config"
+                  name="Caisses"
+                  parent="menu_hanout_configuration"
+                  action="point_of_sale.action_pos_config_tree"
+                  sequence="20"/>
+
+    </data>
+</odoo>

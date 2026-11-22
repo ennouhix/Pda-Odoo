@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+
+        <!-- Fiche client : plafond, solde et règlement du carnet. -->
+        <record id="view_partner_form_hanout" model="ir.ui.view">
+            <field name="name">res.partner.form.hanout</field>
+            <field name="model">res.partner</field>
+            <field name="inherit_id" ref="base.view_partner_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//div[@name='button_box']" position="inside">
+                    <button name="action_hanout_register_credit_payment"
+                            type="object"
+                            class="oe_stat_button"
+                            icon="fa-money"
+                            invisible="hanout_credit_balance &lt;= 0">
+                        <div class="o_stat_info">
+                            <span class="o_stat_value">
+                                <field name="hanout_credit_balance" widget="monetary"/>
+                            </span>
+                            <span class="o_stat_text">Règlement carnet</span>
+                        </div>
+                    </button>
+                </xpath>
+                <xpath expr="//sheet" position="inside">
+                    <group string="Carnet hanout" name="hanout_credit">
+                        <field name="hanout_currency_id" invisible="1"/>
+                        <field name="hanout_credit_limit"/>
+                        <field name="hanout_credit_pending"/>
+                        <field name="hanout_credit_available"
+                               groups="group_hanout_gerant"/>
+                    </group>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- Écran des débiteurs : clients dont le carnet n'est pas soldé. -->
+        <record id="view_hanout_debtor_list" model="ir.ui.view">
+            <field name="name">res.partner.hanout.debtor.list</field>
+            <field name="model">res.partner</field>
+            <field name="arch" type="xml">
+                <list string="Débiteurs du carnet" create="0" edit="0" delete="0">
+                    <field name="hanout_currency_id" column_invisible="1"/>
+                    <field name="name"/>
+                    <field name="phone"/>
+                    <field name="hanout_credit_balance" sum="Total dû"/>
+                    <field name="hanout_credit_limit" optional="show"/>
+                    <field name="hanout_credit_available" optional="show"/>
+                    <field name="user_id" widget="many2one_avatar_user" optional="hide"/>
+                    <button name="action_hanout_register_credit_payment"
+                            type="object"
+                            icon="fa-money"
+                            title="Encaisser un règlement"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="action_hanout_debtor" model="ir.actions.act_window">
+            <field name="name">Débiteurs du carnet</field>
+            <field name="res_model">res.partner</field>
+            <field name="view_mode">list,form</field>
+            <field name="view_id" ref="view_hanout_debtor_list"/>
+            <field name="domain">[('hanout_credit_balance', '&gt;', 0)]</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Aucun client n'a de dette en cours
+                </p>
+                <p>
+                    Les ventes payées avec le moyen de paiement « Crédit
+                    carnet » apparaissent ici jusqu'à leur règlement.
+                </p>
+            </field>
+        </record>
+
+        <!-- Formulaire de règlement du carnet. -->
+        <record id="view_hanout_credit_payment_form" model="ir.ui.view">
+            <field name="name">hanout.credit.payment.form</field>
+            <field name="model">hanout.credit.payment</field>
+            <field name="arch" type="xml">
+                <form string="Règlement du carnet">
+                    <group>
+                        <field name="partner_id" readonly="1" force_save="1"/>
+                        <field name="balance"/>
+                        <field name="pending" invisible="pending == 0"/>
+                        <field name="amount"/>
+                        <field name="journal_id"/>
+                        <field name="payment_date"/>
+                        <field name="reference"/>
+                        <field name="company_id" groups="base.group_multi_company"/>
+                        <field name="currency_id" invisible="1"/>
+                    </group>
+                    <footer>
+                        <button name="action_register" type="object"
+                                string="Encaisser" class="btn-primary"/>
+                        <button string="Annuler" class="btn-secondary"
+                                special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+    </data>
+</odoo>

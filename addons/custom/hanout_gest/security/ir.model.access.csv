@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_hanout_shop_caissier,hanout.shop caissier,model_hanout_shop,group_hanout_caissier,1,0,0,0
+access_hanout_shop_gerant,hanout.shop gerant,model_hanout_shop,group_hanout_gerant,1,1,1,1
+access_hanout_expense_caissier,hanout.expense caissier,model_hanout_expense,group_hanout_caissier,1,1,1,0
+access_hanout_expense_gerant,hanout.expense gerant,model_hanout_expense,group_hanout_gerant,1,1,1,1
+access_hanout_credit_payment_caissier,hanout.credit.payment caissier,model_hanout_credit_payment,group_hanout_caissier,1,1,1,1
+access_hanout_credit_payment_gerant,hanout.credit.payment gerant,model_hanout_credit_payment,group_hanout_gerant,1,1,1,1

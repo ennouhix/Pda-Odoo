@@ -1,0 +1,78 @@
+// Étoile à 8 branches (khatam) répétée = bandeau zellige, 100 % noir/blanc
+// donc parfait pour l'imprimante thermique. Le motif est un fichier SVG du
+// module : Odoo réécrit les URL relatives des SCSS, alors qu'un data-URI
+// finissait préfixé par le chemin du fichier et ne s'affichait pas.
+$hanout-star: url(../img/hanout-zellige-star.svg);
+
+.hanout-zellige {
+    height: 20px;
+    margin: 6px 0;
+    background: $hanout-star repeat-x center;
+    background-size: 20px 20px;
+    &.hanout-zellige-thin {
+        height: 10px;
+        background-size: 10px 10px;
+        opacity: 0.85;
+    }
+}
+
+.hanout-receipt-bismillah {
+    font-size: 18px;
+    letter-spacing: 1px;
+}
+
+.hanout-receipt-shop-name {
+    font-size: 30px;
+    font-weight: 900;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    line-height: 1.1;
+    margin: 4px 0;
+}
+
+.hanout-receipt-divider {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 12px;
+    &::before, &::after {
+        content: "";
+        flex: 1;
+        border-top: 2px dotted #000;
+    }
+    .hanout-star { font-size: 16px; }
+}
+
+.hanout-receipt-shop-line {
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+// Le TOTAL en bloc inversé : noir sur blanc → blanc sur noir.
+.pos-receipt-amount {
+    background: #000;
+    color: #fff;
+    padding: 6px 10px;
+    margin: 8px 0;
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    border-radius: 4px;
+}
+
+// Pied de ticket
+.hanout-thanks-ar {
+    font-size: 24px;
+    font-weight: 700;
+    direction: rtl;
+}
+.hanout-thanks-fr {
+    font-size: 18px;
+    font-weight: 700;
+    margin-top: 2px;
+}
+.hanout-thanks-sub {
+    font-size: 12px;
+    margin-top: 4px;
+    font-style: italic;
+}

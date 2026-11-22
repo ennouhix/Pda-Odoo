@@ -27,7 +27,9 @@ Guide de démonstration complet (pitch, scénario minuté, roadmap) :
 
 Menu **PDA > Scanner** :
 
+* choix de l'opération avant le scan, puis pastilles pour en changer ;
 * recherche produit par code-barres (douchette, clavier ou caméra du téléphone) ;
+* **scan des étiquettes d'emplacement** (`LOC-A1`, `LOC-B1`, …) en plus de la liste ;
 * stock disponible et détail par emplacement interne ;
 * opérations **réception**, **sortie**, **transfert** et **inventaire** ;
 * erreurs lisibles (code-barres inconnu, stock insuffisant, droits, réseau) ;
@@ -40,9 +42,12 @@ Menu **PDA > Scanner** :
 addons/custom/
   pda_base/     socle : sécurité, journal, service métier, API JSON-RPC, écran OWL
   pda_demo/     données de démonstration (produits, emplacements, stock, comptes)
+  hanout_gest/  gestion de boutique : magasins, dépenses, clôture POS, carnet de crédit
+  hanout_demo/  données de test hanout (comptes, magasin, caisse, catalogue)
 config/         odoo.conf
 scripts/        demo-start.sh (base de démo prête à présenter)
-docs/           DEMO_CLIENT.md (support de présentation)
+docs/           DEMO_CLIENT.md (présentation), HANOUT_DEV.md (notes de dev hanout),
+                HANOUT_GUIDE.pdf (guide fonctionnel hanout)
 docker-compose.yml
 ```
 

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+
+        <record id="view_pos_config_form_hanout" model="ir.ui.view">
+            <field name="name">pos.config.form.hanout</field>
+            <field name="model">pos.config</field>
+            <field name="inherit_id" ref="point_of_sale.pos_config_view_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//div[@id='title']" position="after">
+                    <group name="hanout_shop">
+                        <field name="hanout_shop_id"
+                               placeholder="Sélectionner le magasin hanout"
+                               readonly="has_active_session"/>
+                        <field name="hanout_simple_mode"/>
+                    </group>
+                    <div class="mt-2 mb-2">
+                        <button name="open_ui"
+                                type="object"
+                                class="btn btn-primary"
+                                string="Ouvrir la caisse"
+                                icon="fa-shopping-cart"
+                                help="Démarrer la session de vente de cette caisse."/>
+                        <button name="action_hanout_apply_simple_mode"
+                                type="object"
+                                class="btn btn-secondary"
+                                string="Appliquer le mode hanout simple"
+                                invisible="has_active_session"
+                                help="Active l'interface simplifiée et le paiement rapide en espèces."/>
+                    </div>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="view_pos_config_tree_hanout" model="ir.ui.view">
+            <field name="name">pos.config.list.hanout</field>
+            <field name="model">pos.config</field>
+            <field name="inherit_id" ref="point_of_sale.view_pos_config_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//list" position="inside">
+                    <field name="hanout_shop_id" optional="show"/>
+                    <button name="open_ui"
+                            type="object"
+                            string="Ouvrir"
+                            icon="fa-shopping-cart"
+                            class="btn-primary"/>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="action_hanout_open_pos" model="ir.actions.act_window">
+            <field name="name">Ouvrir la caisse</field>
+            <field name="res_model">pos.config</field>
+            <field name="view_mode">kanban,list,form</field>
+            <field name="domain">[('hanout_shop_id', '!=', False)]</field>
+            <field name="search_view_id" ref="point_of_sale.view_pos_config_search"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Aucune caisse hanout configurée
+                </p>
+                <p>
+                    Créez une caisse Point de Vente, rattachez-la à un magasin
+                    hanout puis revenez ici pour démarrer la vente.
+                </p>
+            </field>
+        </record>
+
+    </data>
+</odoo>

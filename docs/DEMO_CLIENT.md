@@ -102,41 +102,58 @@ Emplacements : `LOC-ZONE-A`, `LOC-A1`, `LOC-A2`, `LOC-B1`.
 
 1. **Connexion** avec `pda.operateur`, puis menu **PDA > Scanner**.
    L'écran est plein format, gros boutons, pensé pour un usage debout avec une
-   douchette ou un téléphone.
+   douchette ou un téléphone. Le nom de l'opérateur connecté est affiché.
 
-2. **Scan** de `2000000000015` (ou saisie + Entrée).
+2. **Choisir « Réception »** parmi les quatre grandes cartes (Réception, Sortie,
+   Transfert, Inventaire). L'opération choisie reste rappelée en pastilles, on
+   peut en changer sans rescanner.
+
+3. **Scan** de `2000000000015` (ou saisie + Entrée).
    → Fiche produit : référence, nom, **240 disponible**, détail par emplacement
    (A1).
 
-3. **Réception** : 24 unités vers « B1 — Réserve ». Valider.
-   → Total 264, la ligne B1 apparaît. Le transfert entrant est créé et validé
-   dans Odoo, sans assistant.
+4. **Choisir la destination** : toucher la carte « A1 — Rayon visserie » ou,
+   plus impressionnant, **scanner l'étiquette `LOC-B1`** : l'emplacement
+   destination se remplit tout seul.
+   → Puis 24 unités au pavé `−`/`+`, et **Valider la réception**.
+   → Bandeau vert de confirmation, total 264, la ligne B1 apparaît. Le
+   transfert entrant est créé et validé dans Odoo, sans assistant.
 
-4. **Transfert** : 12 unités de A1 vers B1.
+5. **Transfert** : pastille Transfert, 12 unités de A1 vers B1 (scan de
+   `LOC-A1` puis `LOC-B1`).
    → A1 = 228, B1 = 36. Un `stock.picking` interne est créé.
 
-5. **Sortie** : 5 unités depuis A1.
+6. **Sortie** : 5 unités depuis A1.
    → A1 = 223.
 
-6. **Inventaire** : scanner `2000000000053` (Gants), emplacement B1, quantité
-   comptée `55` au lieu de 60.
+7. **Inventaire** : scanner `2000000000053` (Gants), emplacement B1 : la
+   quantité comptée est pré-remplie avec le stock, il suffit de la corriger à
+   `55` au lieu de 60.
    → L'écart est appliqué immédiatement, sans feuille d'inventaire papier.
 
-7. **Côté Odoo (preuve d'intégration)** : Inventaire > Opérations > Transferts,
+8. **Côté Odoo (preuve d'intégration)** : Inventaire > Opérations > Transferts,
    filtrer sur l'origine `PDA` : les opérations de la démo y figurent, validées.
    Puis Produits > Vis inox : quantités à jour par emplacement.
 
-8. **Gestion d'erreur** : scanner `9999999999999`.
+9. **Gestion d'erreur** : scanner `9999999999999`.
    → Message lisible « Aucun produit ne correspond au code-barres… », code
    `unknown_barcode`, **aucune trace technique** affichée. L'erreur est
    journalisée.
 
-9. **Journal** : se reconnecter avec `pda.responsable`, menu **PDA > Journal**.
-   → Historique complet : utilisateur, date, opération, produit, emplacement,
-   quantité, succès/erreur. C'est la réponse à « qui a bougé quoi ? ».
+10. **Journal** : se reconnecter avec `pda.responsable`, menu **PDA > Journal**.
+    → Historique complet : utilisateur, date, opération, produit, emplacement,
+    quantité, succès/erreur. C'est la réponse à « qui a bougé quoi ? ».
 
-10. **Sécurité** : un utilisateur sans le groupe PDA n'a ni menu ni écran, et
+11. **Sécurité** : un utilisateur sans le groupe PDA n'a ni menu ni écran, et
     l'API lui répond `access_denied` (démontrable avec un compte standard).
+
+### Aperçu de l'interface
+
+| Fiche produit et réception | Confirmation immédiate |
+| --- | --- |
+| ![Fiche produit](screenshots/pda-fiche-produit.png) | ![Confirmation](screenshots/pda-confirmation.png) |
+
+Captures prises sur un écran de téléphone (420 px), mode démonstration.
 
 ### Option caméra
 

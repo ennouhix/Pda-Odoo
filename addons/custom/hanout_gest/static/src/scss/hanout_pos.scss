@@ -1,0 +1,72 @@
+/* Interface de caisse simplifiée hanout.
+ * Activée par la classe ``o_hanout_simple`` posée sur le document lorsque la
+ * caisse a le mode hanout simplifié (voir static/src/js/hanout_pos.js).
+ */
+
+.o_hanout_simple {
+    /* Barre supérieure : on ne garde que le nécessaire (produits, recherche,
+     * scan, menu). L'historique des tickets reste accessible au gérant en
+     * désactivant le mode simplifié. */
+    .orders-button,
+    .navbar-separator {
+        display: none !important;
+    }
+
+    /* Pas de pavé quantité/prix/remise : le caissier encaisse avec les
+     * grandes tuiles et le bouton de paiement. */
+    .numpad {
+        display: none !important;
+    }
+
+    /* Dans la barre d'actions, on ne garde que le bouton « Autres actions » :
+     * il ouvre la fenêtre qui contient le retour client. */
+    .control-buttons > .btn:not(.more-btn) {
+        display: none !important;
+    }
+
+    /* Et dans cette fenêtre, seul le retour client reste proposé : ni
+     * annulation de commande, ni note client, ni liste de prix. Le second
+     * sélecteur couvre le cas où la classe posée par le template hanout
+     * serait écrasée par la classe dynamique du bouton. */
+    .control-buttons-modal > .btn:not(.o_hanout_refund):not(:has(.fa-undo)) {
+        display: none !important;
+    }
+
+    /* Grandes tuiles produits, lisibles à distance. */
+    .product-list {
+        grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)) !important;
+    }
+
+    .category-list {
+        grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr)) !important;
+    }
+
+    .category-button {
+        min-height: 3.5rem;
+        font-size: 1rem;
+    }
+
+    .product .product-name {
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    /* Encaissement : cible tactile confortable, montant très lisible. */
+    .pay-order-button,
+    .fast-pay-button {
+        min-height: 5rem !important;
+        font-size: 1.4rem !important;
+    }
+
+    .pay-order-button {
+        font-weight: 700;
+    }
+
+    .total {
+        font-size: 1.6rem;
+        font-weight: 700;
+    }
+}
+
+/* Les styles du ticket hanout (bandeau zellige, en-tête magasin, total
+ * inversé, remerciements) sont dans hanout_receipt.scss. */

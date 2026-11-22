@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+
+        <record id="view_hanout_shop_list" model="ir.ui.view">
+            <field name="name">hanout.shop.list</field>
+            <field name="model">hanout.shop</field>
+            <field name="arch" type="xml">
+                <list string="Magasins">
+                    <field name="code"/>
+                    <field name="name"/>
+                    <field name="company_id" groups="base.group_multi_company"/>
+                    <field name="warehouse_id"/>
+                    <field name="pos_config_ids" widget="many2many_tags"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="view_hanout_shop_form" model="ir.ui.view">
+            <field name="name">hanout.shop.form</field>
+            <field name="model">hanout.shop</field>
+            <field name="arch" type="xml">
+                <form string="Magasin hanout">
+                    <header>
+                        <button name="action_hanout_open_pos"
+                                type="object"
+                                string="Ouvrir la caisse"
+                                class="btn-primary"
+                                icon="fa-shopping-cart"/>
+                    </header>
+                    <sheet>
+                        <widget name="web_ribbon" title="Archivé" bg_color="text-bg-danger"
+                                invisible="active"/>
+                        <field name="active" invisible="1"/>
+                        <field name="currency_id" invisible="1"/>
+                        <div class="oe_title">
+                            <label for="name" string="Magasin"/>
+                            <h1>
+                                <field name="name" placeholder="Ex. Hanout du centre"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="code" placeholder="Ex. H1"/>
+                                <field name="company_id" groups="base.group_multi_company"/>
+                                <field name="warehouse_id"/>
+                                <field name="phone" placeholder="Ex. 06 12 34 56 78"/>
+                                <field name="address" placeholder="Ex. 12 rue du marché, Casablanca"/>
+                            </group>
+                            <group>
+                                <field name="pos_config_ids" widget="many2many_tags"/>
+                            </group>
+                        </group>
+                        <group string="Notes">
+                            <field name="note" nolabel="1" colspan="2"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_hanout_shop_search" model="ir.ui.view">
+            <field name="name">hanout.shop.search</field>
+            <field name="model">hanout.shop</field>
+            <field name="arch" type="xml">
+                <search string="Rechercher un magasin">
+                    <field name="name"/>
+                    <field name="code"/>
+                    <field name="warehouse_id"/>
+                    <filter name="filter_inactive" string="Archivés"
+                            domain="[('active', '=', False)]"/>
+                    <group>
+                        <filter name="group_company" string="Société"
+                                context="{'group_by': 'company_id'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="action_hanout_shop" model="ir.actions.act_window">
+            <field name="name">Magasins</field>
+            <field name="res_model">hanout.shop</field>
+            <field name="view_mode">list,form</field>
+            <field name="search_view_id" ref="view_hanout_shop_search"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Créez votre premier magasin hanout
+                </p>
+                <p>
+                    Un magasin relie un entrepôt de stock, une ou plusieurs
+                    caisses Point de Vente et les dépenses de caisse.
+                </p>
+            </field>
+        </record>
+
+    </data>
+</odoo>

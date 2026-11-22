@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates id="template" xml:space="preserve">
+
+    <!-- En-tête du ticket : identité du magasin hanout, avant le logo et le
+         numéro de ticket standards d'Odoo. -->
+    <t t-name="hanout_gest.ReceiptHeader"
+       t-inherit="point_of_sale.ReceiptHeader"
+       t-inherit-mode="extension">
+        <xpath expr="//img[hasclass('pos-receipt-logo')]" position="attributes">
+            <attribute name="t-if">!order.config.hanout_simple_mode</attribute>
+        </xpath>
+        <xpath expr="//img[hasclass('pos-receipt-logo')]" position="before">
+            <div t-if="order.config.hanout_shop_name"
+                 class="hanout-receipt-shop text-center pb-2">
+                <!-- Bandeau zellige -->
+                <div class="hanout-zellige"/>
+            
+                <div class="hanout-receipt-shop-name"
+                     t-out="order.config.hanout_shop_name"/>
+                <div class="hanout-receipt-divider">
+                    <span class="hanout-star">✦</span>
+                </div>
+                <div t-if="order.config.hanout_shop_address"
+                     class="hanout-receipt-shop-line"
+                     t-out="order.config.hanout_shop_address"/>
+                <div t-if="order.config.hanout_shop_phone"
+                     class="hanout-receipt-shop-line">
+                    ☎ <t t-out="order.config.hanout_shop_phone"/>
+                </div>
+                <div class="hanout-zellige hanout-zellige-thin"/>
+            </div>
+        </xpath>
+    </t>
+
+    <!-- Ticket hanout simplifié : pas de QR « besoin d'une facture » ni de
+         mention Odoo, et un pied de ticket chaleureux et bilingue. -->
+    <t t-name="hanout_gest.OrderReceipt"
+       t-inherit="point_of_sale.OrderReceipt"
+       t-inherit-mode="extension">
+        <xpath expr="//div[hasclass('pos-receipt-qr')]" position="attributes">
+            <attribute name="t-if">order.company.point_of_sale_use_ticket_qr_code and order.finalized and !order.config.hanout_simple_mode</attribute>
+        </xpath>
+        <xpath expr="//div[hasclass('before-footer')]" position="after">
+            <div t-if="order.config.hanout_simple_mode"
+                 class="hanout-receipt-thanks text-center pt-3">
+                <div class="hanout-zellige"/>
+                <div class="hanout-thanks-ar">شكرا لزيارتكم</div>
+                <div class="hanout-thanks-fr">Merci de votre visite !</div>
+                <div class="hanout-thanks-sub">À bientôt, inchallah</div>
+                <div class="hanout-zellige hanout-zellige-thin"/>
+            </div>
+        </xpath>
+        <xpath expr="//div[hasclass('footer-powered-by')]" position="attributes">
+            <attribute name="t-if">!order.config.hanout_simple_mode</attribute>
+        </xpath>
+    </t>
+
+</templates>
